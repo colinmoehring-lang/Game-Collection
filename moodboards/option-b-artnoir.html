@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option B – Art Déco Neon-Noir · MetroVille Moodboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void:     #080B12;
+    --deep:     #0D1526;
+    --surface:  #111B30;
+    --panel:    #162038;
+    --border:   #1E2E4A;
+    --neon-teal:#00F5D4;
+    --neon-blue:#3B82F6;
+    --neon-gold:#FFD166;
+    --neon-mag: #FF3CAC;
+    --silver:   #A8B8D0;
+    --ghost:    rgba(168,184,208,0.5);
+    --text:     #D8E4F0;
+    --white:    #EEF4FF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--deep);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+  }
+  nav a { color: var(--silver); text-decoration: none; transition: color 0.2s; }
+  nav a:hover { color: var(--neon-teal); }
+
+  /* HERO */
+  .hero {
+    background: var(--deep);
+    padding: 80px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--neon-teal);
+  }
+  /* Art Deco grid lines */
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.4;
+  }
+  /* Corner ornaments */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 20px; left: 20px; right: 20px; bottom: 20px;
+    border: 1px solid rgba(0,245,212,0.12);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    border: 1px solid var(--neon-teal);
+    color: var(--neon-teal);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    margin-bottom: 32px;
+    position: relative;
+    box-shadow: 0 0 12px rgba(0,245,212,0.2);
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(60px, 10vw, 120px);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    line-height: 0.9;
+    position: relative;
+    text-shadow: 0 0 40px rgba(0,245,212,0.3);
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--neon-teal);
+    text-shadow: 0 0 30px var(--neon-teal), 0 0 80px rgba(0,245,212,0.4);
+  }
+  .hero-sub {
+    color: var(--ghost);
+    font-size: 14px;
+    margin-top: 20px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    position: relative;
+  }
+  /* Art Deco ornament */
+  .deco-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 24px 0 0;
+    position: relative;
+  }
+  .deco-line::before, .deco-line::after {
+    content: '';
+    height: 1px;
+    width: 120px;
+    background: linear-gradient(to right, transparent, var(--neon-teal));
+  }
+  .deco-line::after {
+    background: linear-gradient(to left, transparent, var(--neon-teal));
+  }
+  .deco-diamond {
+    width: 8px; height: 8px;
+    background: var(--neon-teal);
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px var(--neon-teal);
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--neon-teal);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 0.1em;
+    color: var(--white);
+    margin-bottom: 32px;
+  }
+
+  /* PALETTE */
+  .palette { display: flex; height: 120px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .swatch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    transition: flex 0.3s;
+    cursor: default;
+  }
+  .swatch:hover { flex: 2.5; }
+  .swatch .name { color: rgba(255,255,255,0.8); }
+  .swatch .hex { color: rgba(255,255,255,0.45); font-size: 8px; }
+
+  /* TYPOGRAPHY */
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .type-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .type-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--neon-teal), transparent);
+  }
+  .type-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon-teal);
+    margin-bottom: 14px;
+  }
+  .display-sample {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(0,245,212,0.15);
+  }
+  .sub-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 0.08em;
+    color: var(--neon-gold);
+  }
+  .body-sample {
+    font-family: 'Jost', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--silver);
+    line-height: 1.8;
+  }
+
+  /* BOARD */
+  .board-wrap {
+    background: #050811;
+    border: 1px solid var(--border);
+    padding: 16px;
+    display: inline-block;
+    box-shadow: 0 0 60px rgba(0,245,212,0.08), inset 0 0 40px rgba(0,0,0,0.5);
+  }
+  .board-grid {
+    display: grid;
+    grid-template-columns: 88px repeat(9, 60px) 88px;
+    grid-template-rows: 88px repeat(9, 60px) 88px;
+    gap: 0;
+    background: rgba(0,245,212,0.08);
+  }
+  .cell {
+    background: var(--deep);
+    border: 0.5px solid rgba(0,245,212,0.12);
+    font-size: 6.5px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3px;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    color: var(--silver);
+    transition: background 0.2s;
+  }
+  .cell.corner {
+    background: var(--surface);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--neon-teal);
+    text-shadow: 0 0 8px rgba(0,245,212,0.5);
+  }
+  .cell.t1 { background: rgba(59,130,246,0.15); border-top: 3px solid var(--neon-blue); }
+  .cell.t2 { background: rgba(255,209,102,0.1); border-top: 3px solid var(--neon-gold); }
+  .cell.t3 { background: rgba(255,60,172,0.12); border-top: 3px solid var(--neon-mag); }
+  .cell.t4 { background: rgba(0,245,212,0.1); border-top: 3px solid var(--neon-teal); }
+  .cell.t5 { background: rgba(168,85,247,0.12); border-top: 3px solid #A855F7; }
+  .cell.t6 { background: rgba(251,146,60,0.1); border-top: 3px solid #FB923C; }
+  .board-center {
+    grid-column: 2 / 11;
+    grid-row: 2 / 11;
+    background: var(--deep);
+    border: 1px solid rgba(0,245,212,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .board-center::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,245,212,0.04) 0%, transparent 70%);
+  }
+  /* Art Deco fan lines */
+  .board-center::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 240px; height: 240px;
+    transform: translate(-50%,-50%);
+    border-radius: 50%;
+    border: 1px solid rgba(0,245,212,0.08);
+    box-shadow: 0 0 0 30px rgba(0,245,212,0.03), 0 0 0 60px rgba(0,245,212,0.02);
+  }
+  .center-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.25em;
+    color: var(--white);
+    text-align: center;
+    position: relative;
+    text-shadow: 0 0 20px rgba(0,245,212,0.3);
+  }
+  .center-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--neon-teal);
+    position: relative;
+  }
+
+  /* CARDS */
+  .cards-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .game-card {
+    width: 190px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    font-family: 'Jost', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, var(--neon-blue), var(--neon-teal));
+  }
+  .card-band { height: 48px; display: flex; align-items: center; justify-content: center; }
+  .card-band-inner {
+    width: calc(100% - 16px);
+    height: calc(100% - 10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    text-align: center;
+    padding: 10px 12px 2px;
+    color: var(--white);
+    line-height: 1.1;
+  }
+  .card-district {
+    text-align: center;
+    font-size: 9px;
+    color: var(--neon-teal);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+  }
+  .card-divider { border: none; border-top: 1px solid var(--border); margin: 0 10px; }
+  .card-prices { padding: 8px 12px; }
+  .card-price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+    color: var(--silver);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .card-price-row:last-child { border-bottom: none; }
+  .card-price-row.buy {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--neon-teal);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+    text-shadow: 0 0 8px rgba(0,245,212,0.4);
+  }
+  .card-footer {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ghost);
+    text-align: center;
+    letter-spacing: 0.08em;
+  }
+  .chance-card {
+    width: 190px;
+    background: linear-gradient(135deg, var(--deep), #1a0830);
+    border: 1px solid var(--neon-mag);
+    flex-shrink: 0;
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    box-shadow: 0 0 24px rgba(255,60,172,0.15), inset 0 0 20px rgba(255,60,172,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .chance-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--neon-mag), transparent);
+  }
+  .chance-deco {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--neon-mag);
+    text-shadow: 0 0 20px rgba(255,60,172,0.6);
+    line-height: 1;
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+  }
+  .chance-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    color: var(--neon-mag);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px rgba(255,60,172,0.5);
+  }
+  .chance-text { font-size: 12px; font-weight: 300; color: var(--silver); line-height: 1.6; font-style: italic; }
+  .chance-value {
+    margin-top: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--neon-gold);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 12px rgba(255,209,102,0.5);
+  }
+
+  /* MOOD BOX */
+  .mood-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--neon-teal);
+    padding: 32px 36px;
+  }
+  .mood-box h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.1em;
+    color: var(--neon-teal);
+    margin-bottom: 14px;
+    text-shadow: 0 0 15px rgba(0,245,212,0.3);
+  }
+  .mood-box p { font-size: 15px; font-weight: 300; color: var(--silver); line-height: 1.8; margin-bottom: 12px; }
+  .mood-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .mood-tag {
+    border: 1px solid rgba(0,245,212,0.3);
+    color: var(--neon-teal);
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    box-shadow: 0 0 6px rgba(0,245,212,0.1);
+  }
+
+  footer {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+    color: var(--ghost);
+    text-align: center;
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+  }
+
+  /* NEON GLOW DEMO */
+  .neon-demo {
+    display: flex; gap: 24px; flex-wrap: wrap;
+  }
+  .neon-badge {
+    padding: 12px 28px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.2em;
+    border: 1px solid;
+    border-radius: 0;
+  }
+  .neon-badge.teal  { border-color: var(--neon-teal); color: var(--neon-teal); box-shadow: 0 0 12px rgba(0,245,212,0.3), inset 0 0 8px rgba(0,245,212,0.1); }
+  .neon-badge.gold  { border-color: var(--neon-gold); color: var(--neon-gold); box-shadow: 0 0 12px rgba(255,209,102,0.3), inset 0 0 8px rgba(255,209,102,0.1); }
+  .neon-badge.mag   { border-color: var(--neon-mag);  color: var(--neon-mag);  box-shadow: 0 0 12px rgba(255,60,172,0.3), inset 0 0 8px rgba(255,60,172,0.1); }
+  .neon-badge.blue  { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 12px rgba(59,130,246,0.3), inset 0 0 8px rgba(59,130,246,0.1); }
+</style>
+</head>
+<body>
+
+<nav>
+  <span style="color:var(--neon-teal);letter-spacing:0.2em;">METROVILLE · ART DIRECTION</span>
+  <div style="display:flex;gap:24px;">
+    <a href="option-a-tischspiel.html">Option A</a>
+    <span style="color:var(--neon-teal);">→ Option B</span>
+    <a href="option-c-midcentury.html">Option C</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Option B · Art Direction Moodboard</div>
+  <h1>ART DÉCO<br><em>NEON·NOIR</em></h1>
+  <div class="deco-line"><div class="deco-diamond"></div></div>
+  <p class="hero-sub">Dark · Retrofuturistisch · Neon-Glow · Geometrie</p>
+</div>
+
+<div class="container">
+
+  <section>
+    <p class="section-label">Das Konzept</p>
+    <div class="mood-box">
+      <h3>Die Stadt schläft nie – sie leuchtet</h3>
+      <p>Das Spielbrett ist eine nächtliche Metropole von oben: Straßengitter in Neon, Gebäude als dunkle Silhouetten mit leuchtenden Fenstern. Art-Déco-Geometrie (Fächermuster, Stufengiebel, Rautenfriese) gibt der UI eine edle Strenge.</p>
+      <p>3D-Brett: dunkle Tischplatte, Spielfiguren als Art-Deco-Skulpturen mit Neon-Umriss-Licht. Kamerafahrt von oben mit leichtem Kippen beim Zug. Partikel-Effekte beim Geld-Empfangen.</p>
+      <div class="mood-tags">
+        <span class="mood-tag">Neon-Glow</span>
+        <span class="mood-tag">Dunkles Theme</span>
+        <span class="mood-tag">Art Déco Geometrie</span>
+        <span class="mood-tag">Retrofuturistisch</span>
+        <span class="mood-tag">Bebas Neue</span>
+        <span class="mood-tag">Stadtnacht</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Farbpalette</p>
+    <h2 class="section-title">NACHT · NEON · GLOW</h2>
+    <div class="palette">
+      <div class="swatch" style="background:#080B12">
+        <span class="name">Void</span><span class="hex">#080B12</span>
+      </div>
+      <div class="swatch" style="background:#0D1526">
+        <span class="name">Deep</span><span class="hex">#0D1526</span>
+      </div>
+      <div class="swatch" style="background:#111B30">
+        <span class="name">Surface</span><span class="hex">#111B30</span>
+      </div>
+      <div class="swatch" style="background:#162038">
+        <span class="name">Panel</span><span class="hex">#162038</span>
+      </div>
+      <div class="swatch" style="background:#00F5D4">
+        <span class="name" style="color:#080B12">Neon Teal</span><span class="hex" style="color:#0D1526">#00F5D4</span>
+      </div>
+      <div class="swatch" style="background:#3B82F6">
+        <span class="name">Neon Blau</span><span class="hex">#3B82F6</span>
+      </div>
+      <div class="swatch" style="background:#FFD166">
+        <span class="name" style="color:#080B12">Neon Gold</span><span class="hex" style="color:#333">#FFD166</span>
+      </div>
+      <div class="swatch" style="background:#FF3CAC">
+        <span class="name">Neon Mag.</span><span class="hex">#FF3CAC</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Neon-Elemente</p>
+    <h2 class="section-title">GLOW STATES</h2>
+    <div class="neon-demo">
+      <div class="neon-badge teal">STADTTOR</div>
+      <div class="neon-badge gold">+ 2.400 M</div>
+      <div class="neon-badge mag">EXPRESSKURIER</div>
+      <div class="neon-badge blue">MAGNETSCHWEBE</div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Typografie</p>
+    <h2 class="section-title">BEBAS NEUE · JOST · DM MONO</h2>
+    <div class="type-grid">
+      <div class="type-card">
+        <div class="type-meta">Display · Bebas Neue Regular</div>
+        <div class="display-sample">METROVILLE</div>
+        <div class="sub-display">CITY OF FORTUNE</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Fließtext · Jost 300 / 500</div>
+        <div class="body-sample">Der Stadtrat hat beschlossen, die Infrastrukturabgabe zu erhöhen. Zahle <strong style="color:var(--neon-teal);">150 M</strong> an die Stadtkasse.</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">UI / Mono · DM Mono 400</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--neon-teal);letter-spacing:0.1em;line-height:1.8;">
+          RAUM-CODE: ACDFG<br>
+          SPIELER: 4 / 6<br>
+          RUNDE: 12 / 30<br>
+          <span style="color:var(--neon-gold);">ZUG-TIMER: 00:23</span>
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Zahlen · Bebas Neue</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--neon-teal);text-shadow:0 0 16px rgba(0,245,212,0.5);letter-spacing:0.1em;">+2.400 M</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--neon-mag);text-shadow:0 0 16px rgba(255,60,172,0.5);letter-spacing:0.1em;">−850 M</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Spielbrett-Ausschnitt</p>
+    <h2 class="section-title">NEON-GRID CITY · 2D-PREVIEW</h2>
+    <p style="margin-bottom:20px;font-size:13px;color:var(--ghost);font-family:'DM Mono',monospace;letter-spacing:0.05em;">Im Spiel: 3D-Brett als nächtliche Skyline von oben, Neon-Leuchtstreifen, Art-Déco-Spielfiguren.</p>
+    <div style="overflow-x:auto;">
+      <div class="board-wrap">
+        <div class="board-grid">
+          <div class="cell corner">STADT-<br>TOR</div>
+          <div class="cell t1">Alte Allee</div>
+          <div class="cell" style="color:var(--neon-gold);">STEUER</div>
+          <div class="cell t1">Linden­weg</div>
+          <div class="cell" style="color:var(--neon-mag);">EXPRESS-<br>KURIER</div>
+          <div class="cell t2">Haupt­platz</div>
+          <div class="cell t2">Rats­herren</div>
+          <div class="cell" style="color:var(--neon-gold);">MAG-<br>SCHWEBE</div>
+          <div class="cell t3">Neon­blvd.</div>
+          <div class="cell t3">Licht­allee</div>
+          <div class="cell corner">ATOM-<br>REAKTOR</div>
+
+          <div class="cell t4" style="border-left:3px solid var(--neon-teal);border-top:none;">Hafen­kai</div>
+          <div class="board-center">
+            <div class="center-logo">METRO<span style="color:var(--neon-teal);">VILLE</span></div>
+            <div style="width:80px;height:1px;background:linear-gradient(to right,transparent,var(--neon-teal),transparent);"></div>
+            <div class="center-sub">City of Fortune</div>
+          </div>
+          <div class="cell t5" style="border-right:3px solid #A855F7;border-top:none;">Turm­str.</div>
+
+          <div class="cell t4" style="border-left:3px solid var(--neon-teal);border-top:none;">Werft­str.</div>
+          <div class="cell t6" style="border-right:3px solid #FB923C;border-top:none;">Kristall</div>
+
+          <div class="cell t4" style="border-left:3px solid var(--neon-teal);border-top:none;">Dock­allee</div>
+          <div class="cell t6" style="border-right:3px solid #FB923C;border-top:none;">Eis­palast</div>
+
+          <div class="cell" style="border-left:3px solid var(--border);border-top:none;color:var(--neon-gold);">MAG-<br>SCHWEBE</div>
+          <div class="cell t6" style="border-right:3px solid #FB923C;border-top:none;">Polar­blvd.</div>
+
+          <div class="cell t4" style="border-left:3px solid var(--neon-teal);border-top:none;">Raumhafen</div>
+          <div class="cell t6" style="border-right:3px solid #FB923C;border-top:none;">Nord­havn</div>
+
+          <div class="cell" style="border-left:3px solid var(--border);border-top:none;color:var(--neon-mag);">STADT-<br>RAT</div>
+          <div class="cell t5" style="border-right:3px solid #A855F7;border-top:none;">Garten</div>
+
+          <div class="cell t4" style="border-left:3px solid var(--neon-teal);border-top:none;">Orbitalkai</div>
+          <div class="cell t5" style="border-right:3px solid #A855F7;border-top:none;">Stern­blvd.</div>
+
+          <div class="cell" style="border-left:3px solid var(--border);border-top:none;color:var(--neon-gold);">MAG-<br>SCHWEBE</div>
+          <div class="cell t5" style="border-right:3px solid #A855F7;border-top:none;">Quasar­str.</div>
+
+          <div class="cell corner">SICHER-<br>ZONE</div>
+          <div class="cell t5" style="border-bottom:3px solid #A855F7;border-top:none;">Botani­ker</div>
+          <div class="cell" style="color:var(--neon-mag);">STADT-<br>RAT</div>
+          <div class="cell t5" style="border-bottom:3px solid #A855F7;border-top:none;">Gewächs­haus</div>
+          <div class="cell" style="color:var(--neon-gold);">STEUER</div>
+          <div class="cell t4" style="border-bottom:3px solid var(--neon-teal);border-top:none;">Hafen­blick</div>
+          <div class="cell t4" style="border-bottom:3px solid var(--neon-teal);border-top:none;">Anker­kai</div>
+          <div class="cell" style="color:var(--neon-mag);">EXPRESS-<br>KURIER</div>
+          <div class="cell t3" style="border-bottom:3px solid var(--neon-mag);border-top:none;">Rathaus­platz</div>
+          <div class="cell t3" style="border-bottom:3px solid var(--neon-mag);border-top:none;">Kaiser­str.</div>
+          <div class="cell corner">RAUM-<br>HAFEN</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Karten-Design</p>
+    <h2 class="section-title">GRUNDSTÜCK · EXPRESSKURIER</h2>
+    <div class="cards-row">
+
+      <div class="game-card">
+        <div class="card-band" style="background:rgba(59,130,246,0.15);border-bottom:1px solid var(--border);">
+          <div class="card-band-inner" style="border:1px solid var(--neon-blue);color:var(--neon-blue);">GRUNDSTÜCK</div>
+        </div>
+        <div class="card-name">LINDEN­WEG</div>
+        <div class="card-district">ALTSTADT-QUARTIER</div>
+        <div class="card-divider"></div>
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>KAUFPREIS</span><span>120 M</span></div>
+          <div class="card-price-row"><span>Miete</span><span>8 M</span></div>
+          <div class="card-price-row"><span>1 Wohnblock</span><span>40 M</span></div>
+          <div class="card-price-row"><span>2 Wohnblöcke</span><span>100 M</span></div>
+          <div class="card-price-row"><span>3 Wohnblöcke</span><span>300 M</span></div>
+          <div class="card-price-row"><span>4 Wohnblöcke</span><span>450 M</span></div>
+          <div class="card-price-row"><span>Wolkenkratzer</span><span>600 M</span></div>
+        </div>
+        <div class="card-footer">HYPOTHEK: 60 M · WOHNBLOCK: 50 M</div>
+      </div>
+
+      <div class="game-card">
+        <div class="card-band" style="background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);">
+          <div class="card-band-inner" style="border:1px solid var(--silver);color:var(--silver);">MAGNETSCHWEBE</div>
+        </div>
+        <div class="card-name">BAHNHOF NORD</div>
+        <div class="card-district">TRANSPORTSYSTEM</div>
+        <div class="card-divider"></div>
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>KAUFPREIS</span><span>200 M</span></div>
+          <div class="card-price-row"><span>1 Station</span><span>25 M</span></div>
+          <div class="card-price-row"><span>2 Stationen</span><span>50 M</span></div>
+          <div class="card-price-row"><span>3 Stationen</span><span>100 M</span></div>
+          <div class="card-price-row"><span>4 Stationen</span><span>200 M</span></div>
+        </div>
+        <div class="card-footer">HYPOTHEK: 100 M</div>
+      </div>
+
+      <div class="chance-card">
+        <div class="chance-label">Expresskurier</div>
+        <div class="chance-deco">EK</div>
+        <div class="chance-text">«Der Stadtrat ehrt Ihre Verdienste um den Nahverkehr.»</div>
+        <div class="chance-value">+ 150 M</div>
+      </div>
+
+      <div class="chance-card" style="background:linear-gradient(135deg,var(--deep),#0a1a10);border-color:var(--neon-teal);box-shadow:0 0 24px rgba(0,245,212,0.15);">
+        <div class="chance-label" style="color:var(--neon-teal);">Stadtrat-Beschluss</div>
+        <div class="chance-deco" style="color:var(--neon-teal);text-shadow:0 0 20px rgba(0,245,212,0.6);">SR</div>
+        <div class="chance-text">«Infrastruktur-Abgabe. Wohnblock: 40 M, Wolkenkratzer: 115 M»</div>
+        <div class="chance-value" style="color:var(--neon-mag);font-size:22px;">ZAHLEN!</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  MetroVille: City of Fortune · Option B · Art Déco Neon-Noir · Art Direction Moodboard
+</footer>
+
+</body>
+</html>

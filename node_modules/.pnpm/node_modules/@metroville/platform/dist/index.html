@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetroVille – Game Collection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-8WW10WCR.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-p5gECI0H.css">
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        METROVILLE
+        <span class="badge">SDK Core v0.1</span>
+      </div>
+      <div class="nav-links">
+        <span>Option C (Mid-Century)</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Modulare Spiele-Kollektion</h1>
+        <p>Plattform-Architektur mit entkoppelten Spielmodulen. Etappe 3: Hot-Seat Tic-Tac-Toe via <code>@metroville/game-tictactoe</code> SDK.</p>
+      </div>
+
+      <div class="game-card">
+        <h2 class="game-title" id="game-name">Tic-Tac-Toe</h2>
+        <p class="game-desc" id="game-desc">Klassisches 3x3-Strategiespiel</p>
+
+        <div class="status-bar" id="status-bar">Lade Spiel...</div>
+
+        <div class="tictactoe-board" id="board">
+          <!-- 9 cells rendered via JS -->
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="btn-restart">Neu starten</button>
+          <button class="secondary" id="btn-bot-move">Bot-Zug ausführen</button>
+        </div>
+      </div>
+    </main>
+
+  </body>
+</html>

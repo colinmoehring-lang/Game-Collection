@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option C – Mid-Century Modern · MetroVille Moodboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand:      #F7F0E3;
+    --paper:     #EEE4CE;
+    --warm-wh:   #FBF7F0;
+    --ink:       #1A1612;
+    --terra:     #C84B2F;    /* Terrakotta / Tomatenrot */
+    --rust-deep: #8B2C1A;
+    --teal:      #1D7A72;    /* Smaragd-Teal */
+    --teal-lt:   #2EA89E;
+    --mustard:   #D4930A;    /* Senf/Gelb */
+    --sky:       #3B7FC4;    /* Himmelblau */
+    --charcoal:  #2C2A26;
+    --warm-grey: #948B7C;
+    --cream-hl:  #F5EDCF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--sand);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* Papier-Körnung overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--terra);
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--warm-wh);
+  }
+  nav a { color: rgba(251,247,240,0.65); text-decoration: none; transition: color 0.2s; }
+  nav a:hover { color: var(--warm-wh); }
+
+  /* HERO */
+  .hero {
+    background: var(--teal);
+    padding: 72px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Geometric shapes */
+  .hero-shape1 {
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 280px; height: 280px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .hero-shape2 {
+    position: absolute;
+    left: 40px; bottom: -40px;
+    width: 180px; height: 180px;
+    background: rgba(212,147,10,0.15);
+    transform: rotate(45deg);
+  }
+  .hero-shape3 {
+    position: absolute;
+    left: 10%; top: 20%;
+    width: 0; height: 0;
+    border-left: 60px solid transparent;
+    border-right: 60px solid transparent;
+    border-bottom: 104px solid rgba(255,255,255,0.05);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--mustard);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    margin-bottom: 28px;
+    position: relative;
+    font-weight: 500;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 800;
+    color: var(--warm-wh);
+    line-height: 1;
+    position: relative;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--mustard);
+    display: block;
+  }
+  .hero-sub {
+    color: rgba(251,247,240,0.65);
+    font-size: 14px;
+    margin-top: 16px;
+    letter-spacing: 0.1em;
+    font-family: 'DM Mono', monospace;
+    position: relative;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 56px 0; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--terra);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: var(--terra);
+    opacity: 0.25;
+    max-width: 80px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 32px;
+    color: var(--charcoal);
+    letter-spacing: -0.02em;
+  }
+  hr.divider { border: none; border-top: 2px solid rgba(26,22,18,0.08); margin: 0; }
+
+  /* PALETTE */
+  .palette { display: flex; height: 130px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .swatch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    transition: flex 0.3s;
+    cursor: default;
+  }
+  .swatch:hover { flex: 2.5; }
+  .swatch.dark { color: rgba(255,255,255,0.8); }
+  .swatch.dark .hex { color: rgba(255,255,255,0.45); font-size: 8px; }
+  .swatch.light { color: var(--ink); }
+  .swatch.light .hex { color: rgba(26,22,18,0.45); font-size: 8px; }
+
+  /* TYPOGRAPHY */
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .type-card {
+    background: var(--warm-wh);
+    border: 2px solid var(--ink);
+    padding: 24px;
+    border-radius: 4px;
+  }
+  .type-meta { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--warm-grey); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .display-sample { font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800; line-height: 1; color: var(--ink); letter-spacing: -0.03em; }
+  .sub-display { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--terra); letter-spacing: -0.02em; }
+  .body-sample { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 300; color: var(--charcoal); line-height: 1.8; }
+
+  /* ── DETAILED BOARD ──────────────────────────────────── */
+  .board-outer {
+    background: var(--warm-wh);
+    border: 3px solid var(--ink);
+    padding: 8px;
+    display: inline-block;
+    border-radius: 6px;
+    box-shadow: 10px 10px 0 var(--charcoal);
+    position: relative;
+  }
+  .board-frame {
+    border: 2px solid var(--ink);
+    display: inline-block;
+    background: var(--ink);
+  }
+
+  /* The full 11×11 CSS grid */
+  .bgrid {
+    display: grid;
+    /* corner=108px, inner field=72px */
+    grid-template-columns: 108px repeat(9, 72px) 108px;
+    grid-template-rows:    108px repeat(9, 72px) 108px;
+    gap: 1px;
+    background: var(--ink);
+  }
+
+  /* ── Generic cell base ── */
+  .bc {
+    background: var(--warm-wh);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Corner cells ── */
+  .bc-corner {
+    background: var(--cream-hl);
+    padding: 6px;
+    gap: 4px;
+  }
+  .bc-corner .c-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .bc-corner .c-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .bc-corner .c-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 7px;
+    color: var(--warm-grey);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Property cell (top-edge: color band on top) ── */
+  .bc-prop {
+    flex-direction: column;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .prop-band {
+    width: 100%;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .prop-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 4px 2px;
+  }
+  .prop-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .prop-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 7px;
+    color: var(--warm-grey);
+    letter-spacing: 0.02em;
+  }
+  .prop-rent {
+    font-family: 'DM Mono', monospace;
+    font-size: 7px;
+    background: var(--ink);
+    color: var(--warm-wh);
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin-top: 2px;
+  }
+
+  /* ── Property cell rotated (left/right edges) ── */
+  /* Left column: band on right */
+  .bc-prop-l { flex-direction: row; padding: 0; justify-content: flex-start; }
+  .bc-prop-l .prop-band { width: 18px; height: 100%; flex-shrink: 0; }
+  .bc-prop-l .prop-body { padding: 4px 5px 4px 6px; align-items: flex-start; text-align: left; }
+
+  /* Right column: band on left */
+  .bc-prop-r { flex-direction: row-reverse; padding: 0; justify-content: flex-start; }
+  .bc-prop-r .prop-band { width: 18px; height: 100%; flex-shrink: 0; }
+  .bc-prop-r .prop-body { padding: 4px 6px 4px 5px; align-items: flex-end; text-align: right; }
+
+  /* ── Bottom-row props: band on bottom ── */
+  .bc-prop-b { flex-direction: column-reverse; justify-content: flex-start; padding: 0; }
+  .bc-prop-b .prop-band { width: 100%; height: 18px; flex-shrink: 0; }
+  .bc-prop-b .prop-body { flex: 1; justify-content: center; gap: 2px; padding: 2px 4px 4px; }
+
+  /* ── Special cells (tax, chance, station, utility) ── */
+  .bc-special {
+    gap: 3px;
+    padding: 6px 4px;
+  }
+  .sp-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .sp-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 7px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .sp-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 6.5px;
+    color: var(--warm-grey);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Station cell ── */
+  .bc-station {
+    gap: 3px;
+    padding: 5px 4px;
+    background: var(--sand);
+  }
+  .st-icon {
+    width: 30px; height: 30px;
+    background: var(--ink);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: var(--warm-wh);
+    flex-shrink: 0;
+  }
+  .st-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 7.5px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .st-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 6.5px;
+    color: var(--warm-grey);
+  }
+
+  /* ── Board Center ── */
+  .bc-center {
+    grid-column: 2 / 11;
+    grid-row: 2 / 11;
+    background: var(--warm-wh);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* CARDS */
+  .cards-row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .game-card {
+    width: 195px;
+    background: var(--warm-wh);
+    border: 2px solid var(--ink);
+    flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: 4px 4px 0 var(--charcoal);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .card-color-strip { height: 14px; }
+  .card-header {
+    background: var(--ink);
+    color: var(--warm-wh);
+    padding: 8px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    padding: 12px 12px 4px;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .card-district {
+    text-align: center;
+    font-size: 9px;
+    color: var(--warm-grey);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+  }
+  .card-divider { border: none; border-top: 1px solid rgba(26,22,18,0.12); margin: 0 10px; }
+  .card-prices { padding: 8px 12px; }
+  .card-price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2.5px 0;
+    font-size: 11.5px;
+    color: var(--charcoal);
+    border-bottom: 1px dotted rgba(26,22,18,0.1);
+    font-weight: 300;
+  }
+  .card-price-row:last-child { border-bottom: none; }
+  .card-price-row.buy {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--teal);
+    border-bottom: 1px solid rgba(26,22,18,0.18);
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+  }
+  .card-footer {
+    background: var(--cream-hl);
+    border-top: 1px solid rgba(26,22,18,0.1);
+    padding: 6px 12px;
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--warm-grey);
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
+
+  .chance-card {
+    width: 195px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 20px 16px;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--charcoal);
+  }
+  .chance-card.express { background: var(--terra); color: var(--warm-wh); }
+  .chance-card.stadtrat { background: var(--teal); color: var(--warm-wh); }
+  .chance-top {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 10px;
+  }
+  .chance-icon-large {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10px;
+    opacity: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .chance-text { font-size: 12px; font-weight: 300; line-height: 1.6; opacity: 0.9; font-style: italic; }
+  .chance-value {
+    margin-top: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mustard);
+    letter-spacing: -0.02em;
+  }
+
+  /* MOOD BOX */
+  .mood-box {
+    background: var(--teal);
+    color: var(--warm-wh);
+    padding: 36px 40px;
+    border-radius: 4px;
+    border: 2px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--charcoal);
+    position: relative;
+    overflow: hidden;
+  }
+  .mood-box::before {
+    content: '';
+    position: absolute;
+    right: -30px; bottom: -30px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .mood-box::after {
+    content: '';
+    position: absolute;
+    right: 40px; bottom: 20px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.04);
+    transform: rotate(45deg);
+  }
+  .mood-box h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--mustard);
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+    position: relative;
+  }
+  .mood-box p { font-size: 15px; font-weight: 300; line-height: 1.8; opacity: 0.9; margin-bottom: 12px; position: relative; }
+  .mood-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; position: relative; }
+  .mood-tag {
+    background: rgba(255,255,255,0.12);
+    color: var(--warm-wh);
+    padding: 5px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+
+  /* Geometric showcase */
+  .geo-showcase {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .geo-item {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--warm-grey);
+    letter-spacing: 0.1em;
+  }
+  .geo-circle { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 8px; }
+  .geo-triangle {
+    width: 0; height: 0;
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    margin: 0 auto 8px;
+  }
+  .geo-square { width: 70px; height: 70px; margin: 0 auto 8px; }
+  .geo-diamond { width: 56px; height: 56px; margin: 12px auto 20px; transform: rotate(45deg); }
+
+  footer {
+    background: var(--ink);
+    color: rgba(251,247,240,0.45);
+    text-align: center;
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span>METROVILLE · ART DIRECTION</span>
+  <div style="display:flex;gap:24px;">
+    <a href="option-a-tischspiel.html">Option A</a>
+    <a href="option-b-artnoir.html">Option B</a>
+    <span style="color:#F7F0E3;font-weight:bold;">→ Option C</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-shape1"></div>
+  <div class="hero-shape2"></div>
+  <div class="hero-shape3"></div>
+  <div class="hero-badge">Option C · Art Direction Moodboard</div>
+  <h1>Mid-Century<br><em>Illustration</em></h1>
+  <p class="hero-sub">Flat · Geometrisch · Papierkörnung · Bold</p>
+</div>
+
+<div class="container">
+
+  <section>
+    <p class="section-label">Das Konzept</p>
+    <div class="mood-box">
+      <h3>Farbe, Form, Freude</h3>
+      <p>Inspiriert von den kühnen Grafiken der 1950er–60er: Plakate, Reiseposter, Ausstellungsgestaltung. Klare Primärfarben, handgezeichnet wirkende Elemente, Papierkörnung als zentrales Textur-Element. Alles wirkt kuratiert und von Hand gebaut.</p>
+      <p>Das 3D-Brett ist in der Draufsicht wie ein Kinderbuch-Diorama: Gebäude als flache, kolorierte Silhouetten, sanfte Schattierung, Papier-Materialität. Animationen sind schnell und snappy, kein Glas oder Glow.</p>
+      <div class="mood-tags">
+        <span class="mood-tag">Flat Illustration</span>
+        <span class="mood-tag">Papierkörnung</span>
+        <span class="mood-tag">Bold Farben</span>
+        <span class="mood-tag">Mid-Century</span>
+        <span class="mood-tag">Syne Display</span>
+        <span class="mood-tag">Plakat-Look</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="section-label">Geometrie-Sprache</p>
+    <h2 class="section-title">Shapes & Farb-Formen</h2>
+    <div class="geo-showcase">
+      <div class="geo-item">
+        <div class="geo-circle" style="background:var(--terra);"></div>
+        TERRAKOTTA
+      </div>
+      <div class="geo-item">
+        <div class="geo-triangle" style="border-bottom:70px solid var(--teal);"></div>
+        TEAL
+      </div>
+      <div class="geo-item">
+        <div class="geo-square" style="background:var(--mustard);"></div>
+        SENF
+      </div>
+      <div class="geo-item">
+        <div class="geo-diamond" style="background:var(--sky);"></div>
+        HIMMELBLAU
+      </div>
+      <div class="geo-item">
+        <div class="geo-circle" style="background:var(--charcoal);width:60px;height:60px;"></div>
+        ANTHRAZIT
+      </div>
+      <div class="geo-item" style="font-size:11px;">
+        <div style="background:var(--sand);border:2px solid var(--ink);width:80px;height:80px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;">
+          <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:800;letter-spacing:-0.01em;color:var(--ink);text-align:center;">PAPIER<br>BASIS</div>
+        </div>
+        SAND
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="section-label">Farbpalette</p>
+    <h2 class="section-title">Druckfarben auf Papier</h2>
+    <div class="palette">
+      <div class="swatch light" style="background:#F7F0E3">
+        <span>Sand</span><span class="hex">#F7F0E3</span>
+      </div>
+      <div class="swatch light" style="background:#EEE4CE">
+        <span>Papier</span><span class="hex">#EEE4CE</span>
+      </div>
+      <div class="swatch dark" style="background:#C84B2F">
+        <span>Terrakotta</span><span class="hex">#C84B2F</span>
+      </div>
+      <div class="swatch dark" style="background:#1D7A72">
+        <span>Teal</span><span class="hex">#1D7A72</span>
+      </div>
+      <div class="swatch light" style="background:#D4930A">
+        <span>Senf</span><span class="hex">#D4930A</span>
+      </div>
+      <div class="swatch dark" style="background:#3B7FC4">
+        <span>Himmel</span><span class="hex">#3B7FC4</span>
+      </div>
+      <div class="swatch dark" style="background:#8B5CF6">
+        <span>Lila</span><span class="hex">#8B5CF6</span>
+      </div>
+      <div class="swatch dark" style="background:#2C2A26">
+        <span>Anthrazit</span><span class="hex">#2C2A26</span>
+      </div>
+      <div class="swatch dark" style="background:#1A1612">
+        <span>Tinte</span><span class="hex">#1A1612</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="section-label">Typografie</p>
+    <h2 class="section-title">Syne · DM Sans · DM Mono</h2>
+    <div class="type-grid">
+      <div class="type-card">
+        <div class="type-meta">Display · Syne 800</div>
+        <div class="display-sample">Metro<span style="color:var(--terra);">Ville</span></div>
+        <div class="sub-display">City of Fortune</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Fließtext · DM Sans 300 / 500</div>
+        <div class="body-sample">Der Stadtrat hat beschlossen, die Infrastrukturabgabe zu erhöhen. Zahle <strong style="font-weight:500;color:var(--terra);">150 M</strong> an die Stadtkasse.</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">UI / Mono · DM Mono 400</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--warm-grey);letter-spacing:0.06em;line-height:1.8;">
+          RAUM: <span style="color:var(--terra);">ACDFG</span><br>
+          SPIELER: 4 / 6<br>
+          RUNDE: 12 / 30<br>
+          TIMER: <span style="color:var(--mustard);">00:23</span>
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Zahlen · Syne 700</div>
+        <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:700;color:var(--teal);letter-spacing:-0.03em;">+2.400 M</div>
+        <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:700;color:var(--terra);letter-spacing:-0.03em;">−850 M</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="section-label">Spielbrett-Ausschnitt</p>
+    <h2 class="section-title">Mid-Century Stadtplan · Detailliertes Brett</h2>
+    <p style="margin-bottom:20px;font-size:13px;color:var(--warm-grey);font-family:'DM Mono',monospace;">Jedes Feld zeigt Name, Kaufpreis und Grundmiete. Im Spiel: 3D-Draufsicht mit Papier-Materialität &amp; Gebäude-Silhouetten.</p>
+    <div style="overflow-x:auto;">
+      <div class="board-outer">
+        <div class="board-frame">
+          <div class="bgrid">
+
+            <!-- ══════════ ROW 1 (TOP): Corners + Top-edge fields ══════════ -->
+            <!-- C1 CORNER: Raumhafen-Boulevard (GO equivalent, top-right) -->
+            <div class="bc bc-corner" style="grid-column:1;grid-row:1;background:#E8F4EF;">
+              <div class="c-icon">🛸</div>
+              <div class="c-label">Raumhafen<br>Boulevard</div>
+              <div class="c-sub">ZIEL / START</div>
+            </div>
+
+            <!-- Top row L→R: fields 20–29 (bottom of board in classic layout, here top) -->
+            <!-- We show the TOP edge as the "upper" side of the board -->
+            <!-- Brown/Purple group -->
+            <div class="bc bc-prop-b" style="background:#F0EBF8;">
+              <div class="prop-band" style="background:#8B5CF6;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Quasar­str.</div>
+                <div class="prop-price">Kauf: 300 M</div>
+                <div class="prop-rent">Miete: 26 M</div>
+              </div>
+            </div>
+            <div class="bc bc-station" style="flex-direction:column;">
+              <div class="st-icon">🚄</div>
+              <div class="st-name">Bahnhof<br>West</div>
+              <div class="st-price">200 M</div>
+            </div>
+            <div class="bc bc-prop-b" style="background:#F0EBF8;">
+              <div class="prop-band" style="background:#8B5CF6;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Stern­blvd.</div>
+                <div class="prop-price">Kauf: 300 M</div>
+                <div class="prop-rent">Miete: 26 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FFF3E0;">
+              <div class="sp-icon">📜</div>
+              <div class="sp-label" style="color:var(--mustard);">Stadtrat</div>
+              <div class="sp-sub">Beschluss</div>
+            </div>
+            <div class="bc bc-prop-b" style="background:#F0EBF8;">
+              <div class="prop-band" style="background:#8B5CF6;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Garten­str.</div>
+                <div class="prop-price">Kauf: 280 M</div>
+                <div class="prop-rent">Miete: 22 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-b" style="background:#FFF8E1;">
+              <div class="prop-band" style="background:#D97706;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Nord­havn</div>
+                <div class="prop-price">Kauf: 260 M</div>
+                <div class="prop-rent">Miete: 22 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-b" style="background:#FFF8E1;">
+              <div class="prop-band" style="background:#D97706;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Polar­blvd.</div>
+                <div class="prop-price">Kauf: 260 M</div>
+                <div class="prop-rent">Miete: 22 M</div>
+              </div>
+            </div>
+            <div class="bc bc-station" style="flex-direction:column;">
+              <div class="st-icon">🚄</div>
+              <div class="st-name">Bahnhof<br>Ost</div>
+              <div class="st-price">200 M</div>
+            </div>
+            <div class="bc bc-prop-b" style="background:#FFF8E1;">
+              <div class="prop-band" style="background:#D97706;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Eis­palast</div>
+                <div class="prop-price">Kauf: 240 M</div>
+                <div class="prop-rent">Miete: 20 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FDE8E4;">
+              <div class="sp-icon">✉️</div>
+              <div class="sp-label" style="color:var(--terra);">Express­kurier</div>
+              <div class="sp-sub">Ziehe Karte</div>
+            </div>
+
+            <!-- C2 CORNER: Sicherheitszone (Jail / top-left) -->
+            <div class="bc bc-corner" style="grid-column:11;grid-row:1;">
+              <div class="c-icon">🔒</div>
+              <div class="c-label">Sicherheits­zone</div>
+              <div class="c-sub">ZU BESUCH</div>
+            </div>
+
+            <!-- ══════════ ROWS 2–10: Left & Right sides + center ══════════ -->
+
+            <!-- LEFT column (col 1, rows 2–10) — Right-edge fields -->
+            <!-- Fields read upward, so band is on the right -->
+            <div class="bc bc-prop-r" style="background:#E8F4EF;grid-column:1;grid-row:2;">
+              <div class="prop-band" style="background:var(--teal);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Alte Allee</div>
+                <div class="prop-price">60 M</div>
+                <div class="prop-rent">Miete: 2 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FFF8E1;grid-column:1;grid-row:3;">
+              <div class="sp-icon">💰</div>
+              <div class="sp-label" style="color:var(--mustard);">Steuer</div>
+              <div class="sp-sub">Zahle 200 M</div>
+            </div>
+            <div class="bc bc-prop-r" style="background:#E8F4EF;grid-column:1;grid-row:4;">
+              <div class="prop-band" style="background:var(--teal);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Linden­weg</div>
+                <div class="prop-price">100 M</div>
+                <div class="prop-rent">Miete: 6 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FDE8E4;grid-column:1;grid-row:5;">
+              <div class="sp-icon">✉️</div>
+              <div class="sp-label" style="color:var(--terra);">Express­kurier</div>
+              <div class="sp-sub">Ziehe Karte</div>
+            </div>
+            <div class="bc bc-prop-r" style="background:#FFF3E0;grid-column:1;grid-row:6;">
+              <div class="prop-band" style="background:var(--mustard);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Haupt­platz</div>
+                <div class="prop-price">140 M</div>
+                <div class="prop-rent">Miete: 10 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-r" style="background:#FFF3E0;grid-column:1;grid-row:7;">
+              <div class="prop-band" style="background:var(--mustard);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Rats­herren­str.</div>
+                <div class="prop-price">140 M</div>
+                <div class="prop-rent">Miete: 10 M</div>
+              </div>
+            </div>
+            <div class="bc bc-station" style="flex-direction:column;grid-column:1;grid-row:8;">
+              <div class="st-icon">🚄</div>
+              <div class="st-name">Bahnhof<br>Süd</div>
+              <div class="st-price">200 M</div>
+            </div>
+            <div class="bc bc-prop-r" style="background:#FDE8E4;grid-column:1;grid-row:9;">
+              <div class="prop-band" style="background:var(--terra);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Neon­boulevard</div>
+                <div class="prop-price">160 M</div>
+                <div class="prop-rent">Miete: 12 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-r" style="background:#FDE8E4;grid-column:1;grid-row:10;">
+              <div class="prop-band" style="background:var(--terra);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Licht­allee</div>
+                <div class="prop-price">180 M</div>
+                <div class="prop-rent">Miete: 14 M</div>
+              </div>
+            </div>
+
+            <!-- RIGHT column (col 11, rows 2–10) — Left-edge fields -->
+            <!-- Fields read downward, band on the left -->
+            <div class="bc bc-prop-l" style="background:#E3EDF8;grid-column:11;grid-row:2;">
+              <div class="prop-band" style="background:var(--sky);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Turm­str.</div>
+                <div class="prop-price">220 M</div>
+                <div class="prop-rent">Miete: 18 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#FFF8E1;grid-column:11;grid-row:3;">
+              <div class="prop-band" style="background:#D97706;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Kristall­str.</div>
+                <div class="prop-price">240 M</div>
+                <div class="prop-rent">Miete: 20 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#E3EDF8;grid-column:11;grid-row:4;">
+              <div class="prop-band" style="background:var(--sky);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Dock­allee</div>
+                <div class="prop-price">220 M</div>
+                <div class="prop-rent">Miete: 18 M</div>
+              </div>
+            </div>
+            <div class="bc bc-station" style="flex-direction:column;grid-column:11;grid-row:5;">
+              <div class="st-icon">🚄</div>
+              <div class="st-name">Bahnhof<br>Nord</div>
+              <div class="st-price">200 M</div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#E3EDF8;grid-column:11;grid-row:6;">
+              <div class="prop-band" style="background:var(--sky);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Raumhafen</div>
+                <div class="prop-price">200 M</div>
+                <div class="prop-rent">Miete: 16 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#FFF8E1;grid-column:11;grid-row:7;">
+              <div class="prop-band" style="background:#D97706;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Orbital­kai</div>
+                <div class="prop-price">260 M</div>
+                <div class="prop-rent">Miete: 22 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FDE8E4;grid-column:11;grid-row:8;">
+              <div class="sp-icon">📜</div>
+              <div class="sp-label" style="color:var(--terra);">Stadtrat</div>
+              <div class="sp-sub">Beschluss</div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#F0EBF8;grid-column:11;grid-row:9;">
+              <div class="prop-band" style="background:#8B5CF6;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Hafen­blick</div>
+                <div class="prop-price">300 M</div>
+                <div class="prop-rent">Miete: 26 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop-l" style="background:#F0EBF8;grid-column:11;grid-row:10;">
+              <div class="prop-band" style="background:#8B5CF6;"></div>
+              <div class="prop-body">
+                <div class="prop-name">Anker­kai</div>
+                <div class="prop-price">320 M</div>
+                <div class="prop-rent">Miete: 28 M</div>
+              </div>
+            </div>
+
+            <!-- ══════════ BOARD CENTER ══════════ -->
+            <div class="bc-center">
+              <!-- SVG Center Art -->
+              <svg viewBox="0 0 540 540" width="540" height="540" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;">
+                <!-- Outer ring -->
+                <circle cx="270" cy="270" r="240" fill="none" stroke="#1A1612" stroke-width="1.5" opacity="0.06"/>
+                <circle cx="270" cy="270" r="180" fill="none" stroke="#1A1612" stroke-width="1" opacity="0.05"/>
+                <!-- Radiating lines -->
+                <g opacity="0.04" stroke="#1A1612" stroke-width="1">
+                  <line x1="270" y1="30" x2="270" y2="510"/>
+                  <line x1="30" y1="270" x2="510" y2="270"/>
+                  <line x1="100" y1="100" x2="440" y2="440"/>
+                  <line x1="440" y1="100" x2="100" y2="440"/>
+                </g>
+                <!-- Large circle fill (background shape) -->
+                <circle cx="270" cy="270" r="140" fill="#C84B2F" opacity="0.07"/>
+                <!-- Inner accent ring -->
+                <circle cx="270" cy="270" r="100" fill="none" stroke="#C84B2F" stroke-width="2.5" opacity="0.15"/>
+                <!-- Mustard bar -->
+                <rect x="150" y="262" width="240" height="3" fill="#D4930A" opacity="0.4" rx="1.5"/>
+                <!-- Geometric triangles -->
+                <polygon points="270,150 310,215 230,215" fill="#1D7A72" opacity="0.12"/>
+                <polygon points="270,390 310,325 230,325" fill="#1D7A72" opacity="0.12"/>
+              </svg>
+              <!-- Text overlay -->
+              <div style="position:relative;text-align:center;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--warm-grey);">Stadt der</div>
+                <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--ink);letter-spacing:-0.04em;line-height:1;">Metro<span style="color:var(--terra);">Ville</span></div>
+                <div style="width:60px;height:3px;background:var(--mustard);border-radius:2px;"></div>
+                <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--charcoal);letter-spacing:-0.01em;">City of Fortune</div>
+                <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--warm-grey);margin-top:4px;">Retrofuturistische Metropole</div>
+                <!-- Mini district legend -->
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px;max-width:280px;">
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:var(--teal);display:inline-block;"></span>Altstadt
+                  </div>
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:var(--mustard);display:inline-block;"></span>Zentrum
+                  </div>
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:var(--terra);display:inline-block;"></span>Neonviertel
+                  </div>
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:var(--sky);display:inline-block;"></span>Hafenviertel
+                  </div>
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:#D97706;display:inline-block;"></span>Polardistrikt
+                  </div>
+                  <div style="display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;color:var(--charcoal);">
+                    <span style="width:10px;height:10px;border-radius:2px;background:#8B5CF6;display:inline-block;"></span>Weltraumring
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════ ROW 11 (BOTTOM): Corners + Bottom-edge fields ══════════ -->
+            <!-- C3 CORNER: Stadttor / GO (bottom-left) -->
+            <div class="bc bc-corner" style="grid-column:1;grid-row:11;background:var(--teal);">
+              <div class="c-icon" style="font-size:28px;">🏛</div>
+              <div class="c-label" style="color:var(--warm-wh);">Stadttor</div>
+              <div class="c-sub" style="color:rgba(251,247,240,0.6);">SAMMLE 200 M</div>
+            </div>
+
+            <!-- Bottom row fields (read right-to-left) -->
+            <div class="bc bc-prop" style="background:#FFF3E0;">
+              <div class="prop-band" style="background:var(--mustard);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Botani­ker­str.</div>
+                <div class="prop-price">Kauf: 120 M</div>
+                <div class="prop-rent">Miete: 8 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FDE8E4;">
+              <div class="sp-icon">📜</div>
+              <div class="sp-label" style="color:var(--terra);">Stadtrat</div>
+              <div class="sp-sub">Beschluss</div>
+            </div>
+            <div class="bc bc-prop" style="background:#FFF3E0;">
+              <div class="prop-band" style="background:var(--mustard);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Gewächs­haus­weg</div>
+                <div class="prop-price">Kauf: 120 M</div>
+                <div class="prop-rent">Miete: 8 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#FFF8E1;">
+              <div class="sp-icon">💸</div>
+              <div class="sp-label" style="color:var(--mustard);">Bürger­steuer</div>
+              <div class="sp-sub">Zahle 75 M</div>
+            </div>
+            <div class="bc bc-prop" style="background:#E3EDF8;">
+              <div class="prop-band" style="background:var(--sky);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Hafen­kai</div>
+                <div class="prop-price">Kauf: 200 M</div>
+                <div class="prop-rent">Miete: 16 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop" style="background:#E3EDF8;">
+              <div class="prop-band" style="background:var(--sky);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Werft­straße</div>
+                <div class="prop-price">Kauf: 200 M</div>
+                <div class="prop-rent">Miete: 16 M</div>
+              </div>
+            </div>
+            <div class="bc bc-station" style="flex-direction:column;">
+              <div class="st-icon">🚄</div>
+              <div class="st-name">Bahnhof<br>Zentrum</div>
+              <div class="st-price">200 M</div>
+            </div>
+            <div class="bc bc-prop" style="background:#FDE8E4;">
+              <div class="prop-band" style="background:var(--terra);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Rathaus­platz</div>
+                <div class="prop-price">Kauf: 180 M</div>
+                <div class="prop-rent">Miete: 14 M</div>
+              </div>
+            </div>
+            <div class="bc bc-prop" style="background:#FDE8E4;">
+              <div class="prop-band" style="background:var(--terra);"></div>
+              <div class="prop-body">
+                <div class="prop-name">Kaiser­straße</div>
+                <div class="prop-price">Kauf: 160 M</div>
+                <div class="prop-rent">Miete: 12 M</div>
+              </div>
+            </div>
+            <div class="bc bc-special" style="background:#E8F4EF;">
+              <div class="sp-icon">⚡</div>
+              <div class="sp-label" style="color:var(--teal);">Atom­reaktor</div>
+              <div class="sp-sub">Versorgungs­werk</div>
+            </div>
+
+            <!-- C4 CORNER: Freier Stadtpark (bottom-right) -->
+            <div class="bc bc-corner" style="grid-column:11;grid-row:11;background:#E8F4EF;">
+              <div class="c-icon">🌳</div>
+              <div class="c-label">Freier<br>Stadtpark</div>
+              <div class="c-sub">NEUTRAL</div>
+            </div>
+
+          </div><!-- /bgrid -->
+        </div><!-- /board-frame -->
+      </div><!-- /board-outer -->
+    </div><!-- /overflow -->
+  </section>
+
+  <hr class="divider">
+
+  <section>
+    <p class="section-label">Karten-Design</p>
+    <h2 class="section-title">Grundstück · Expresskurier · Stadtrat</h2>
+    <div class="cards-row">
+
+      <div class="game-card">
+        <div class="card-color-strip" style="background:var(--teal);"></div>
+        <div class="card-header">Grundstück</div>
+        <div class="card-name">Lindenweg</div>
+        <div class="card-district">Altstadt-Quartier</div>
+        <div class="card-divider"></div>
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>Kaufpreis</span><span>120 M</span></div>
+          <div class="card-price-row"><span>Miete</span><span>8 M</span></div>
+          <div class="card-price-row"><span>1 Wohnblock</span><span>40 M</span></div>
+          <div class="card-price-row"><span>2 Wohnblöcke</span><span>100 M</span></div>
+          <div class="card-price-row"><span>3 Wohnblöcke</span><span>300 M</span></div>
+          <div class="card-price-row"><span>4 Wohnblöcke</span><span>450 M</span></div>
+          <div class="card-price-row"><span>Wolkenkratzer</span><span>600 M</span></div>
+        </div>
+        <div class="card-footer">Wohnblock: 50 M · Wolkenkratzer: 250 M</div>
+      </div>
+
+      <div class="game-card">
+        <div class="card-color-strip" style="background:var(--charcoal);"></div>
+        <div class="card-header">Magnetschwebe</div>
+        <div class="card-name">Bahnhof Nord</div>
+        <div class="card-district">Transportsystem</div>
+        <div class="card-divider"></div>
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>Kaufpreis</span><span>200 M</span></div>
+          <div class="card-price-row"><span>1 Station</span><span>25 M</span></div>
+          <div class="card-price-row"><span>2 Stationen</span><span>50 M</span></div>
+          <div class="card-price-row"><span>3 Stationen</span><span>100 M</span></div>
+          <div class="card-price-row"><span>4 Stationen</span><span>200 M</span></div>
+        </div>
+        <div class="card-footer">Hypothek: 100 M</div>
+      </div>
+
+      <div class="chance-card express">
+        <div class="chance-top">Expresskurier</div>
+        <div class="chance-icon-large">EK</div>
+        <div class="chance-text">«Der Stadtrat ehrt Ihre Verdienste um den öffentlichen Nahverkehr.»</div>
+        <div class="chance-value">+150 M</div>
+      </div>
+
+      <div class="chance-card stadtrat">
+        <div class="chance-top">Stadtrat-Beschluss</div>
+        <div class="chance-icon-large">SR</div>
+        <div class="chance-text">«Infrastruktur-Abgabe. Wohnblock: 40 M, Wolkenkratzer: 115 M»</div>
+        <div class="chance-value" style="color:var(--cream-hl);">Zahlen!</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  MetroVille: City of Fortune · Option C · Mid-Century Illustration · Art Direction Moodboard
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "@metroville/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@metroville/game-sdk": "workspace:*",
+    "@metroville/game-tictactoe": "workspace:*",
+    "colyseus": "0.15.57",
+    "@colyseus/tools": "0.15.8",
+    "@colyseus/ws-transport": "0.15.3",
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

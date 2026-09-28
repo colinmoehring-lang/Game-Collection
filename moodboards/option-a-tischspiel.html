@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option A – Haptisches Tischspiel · MetroVille Moodboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Pro:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:    #F5EFE0;
+    --parchment:#EDE3C8;
+    --ink:      #1C1712;
+    --forest:   #2D5016;
+    --burgundy: #7B1D2E;
+    --gold:     #C9922A;
+    --gold-lt:  #E8B84B;
+    --rust:     #A0380F;
+    --sage:     #7A9E6C;
+    --slate:    #4A5568;
+    --navy:     #1A2740;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.6;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  }
+
+  /* NAV */
+  nav {
+    background: var(--ink);
+    color: var(--gold-lt);
+    padding: 12px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+  nav a {
+    color: var(--gold-lt);
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  nav a:hover { opacity: 1; }
+
+  /* HERO */
+  .hero {
+    background: var(--ink);
+    padding: 64px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 18px,
+      rgba(201,146,42,0.06) 18px,
+      rgba(201,146,42,0.06) 19px
+    );
+  }
+  .hero-badge {
+    display: inline-block;
+    border: 1.5px solid var(--gold);
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    margin-bottom: 28px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 6vw, 80px);
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1.05;
+    position: relative;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold-lt);
+  }
+  .hero-sub {
+    color: rgba(245,239,224,0.55);
+    font-size: 18px;
+    margin-top: 16px;
+    font-style: italic;
+  }
+
+  /* SECTION WRAPPER */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 56px 0; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 12px;
+  }
+
+  /* PALETTE */
+  .palette { display: flex; gap: 0; border-radius: 6px; overflow: hidden; height: 140px; box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
+  .swatch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    transition: flex 0.3s;
+  }
+  .swatch:hover { flex: 2; }
+  .swatch span { display: block; opacity: 0.85; }
+  .swatch .hex { opacity: 0.6; font-size: 9px; }
+  .swatch.light { color: var(--ink); }
+  .swatch.dark  { color: var(--cream); }
+
+  /* TYPOGRAPHY */
+  .type-samples { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .type-card {
+    background: var(--cream);
+    border: 1px solid rgba(28,23,18,0.15);
+    padding: 28px;
+    border-radius: 4px;
+    box-shadow: 3px 3px 0 rgba(28,23,18,0.12);
+  }
+  .type-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--slate); margin-bottom: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .display-sample { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 900; line-height: 1; color: var(--ink); }
+  .display-sample.italic { font-style: italic; color: var(--burgundy); font-size: 36px; }
+  .body-sample { font-family: 'Crimson Pro', serif; font-size: 18px; color: var(--ink); line-height: 1.7; }
+  .mono-sample { font-family: 'DM Mono', monospace; font-size: 14px; color: var(--slate); letter-spacing: 0.05em; }
+
+  /* BOARD PREVIEW */
+  .board-preview {
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    padding: 4px;
+    box-shadow: 6px 6px 0 rgba(28,23,18,0.2);
+    display: inline-block;
+  }
+  .board-inner {
+    border: 1px solid rgba(28,23,18,0.3);
+    padding: 3px;
+    display: inline-block;
+  }
+  .board-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(9, 56px) 80px;
+    grid-template-rows: 80px repeat(9, 56px) 80px;
+    gap: 0;
+    background: var(--ink);
+  }
+  .cell {
+    background: var(--cream);
+    border: 0.5px solid rgba(28,23,18,0.2);
+    font-size: 7px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .cell.corner {
+    background: var(--parchment);
+    font-family: 'Playfair Display', serif;
+    font-size: 8px;
+    font-weight: 700;
+  }
+  .cell.forest-bg { background: #D4E8C5; border-top: 4px solid var(--forest); }
+  .cell.burgundy-bg { background: #F0D4DA; border-top: 4px solid var(--burgundy); }
+  .cell.gold-bg { background: #FAF0D5; border-top: 4px solid var(--gold); }
+  .cell.rust-bg { background: #F0DCD4; border-top: 4px solid var(--rust); }
+  .cell.navy-bg { background: #D4DCE8; border-top: 4px solid var(--navy); }
+  .cell.sage-bg { background: #D8E8D4; border-top: 4px solid var(--sage); }
+  /* Center */
+  .board-center {
+    grid-column: 2 / 11;
+    grid-row: 2 / 11;
+    background: var(--cream);
+    border: 0.5px solid rgba(28,23,18,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .center-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.1;
+  }
+  .center-logo em { font-style: italic; color: var(--gold); }
+  .center-deco {
+    width: 60px; height: 2px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  /* CARD */
+  .cards-row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .game-card {
+    width: 200px;
+    background: var(--cream);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 rgba(28,23,18,0.18);
+    flex-shrink: 0;
+    font-family: 'Crimson Pro', serif;
+  }
+  .card-color-band {
+    height: 10px;
+  }
+  .card-header {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 14px;
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 900;
+    text-align: center;
+    padding: 14px 12px 6px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .card-district {
+    text-align: center;
+    font-size: 11px;
+    color: var(--slate);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+  }
+  .card-divider {
+    border: none;
+    border-top: 1px solid rgba(28,23,18,0.15);
+    margin: 0 12px;
+  }
+  .card-prices {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .card-price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    color: var(--ink);
+    border-bottom: 1px dotted rgba(28,23,18,0.12);
+  }
+  .card-price-row:last-child { border-bottom: none; }
+  .card-price-row.buy {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--forest);
+    border-bottom: 1px solid rgba(28,23,18,0.2);
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+  }
+  .card-footer {
+    background: var(--parchment);
+    border-top: 1px solid rgba(28,23,18,0.12);
+    padding: 8px 14px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--slate);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  /* Chance card */
+  .chance-card {
+    width: 200px;
+    background: var(--ink);
+    border: 1.5px solid var(--gold);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 rgba(201,146,42,0.3);
+    flex-shrink: 0;
+    text-align: center;
+    padding: 20px 16px;
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+  }
+  .chance-icon {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: var(--gold-lt);
+    line-height: 1;
+    margin-bottom: 12px;
+    font-weight: 900;
+    font-style: italic;
+  }
+  .chance-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .chance-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--cream);
+    font-style: italic;
+  }
+  .chance-value {
+    margin-top: 14px;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-lt);
+  }
+
+  /* MOOD DESCRIPTION */
+  .mood-box {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 36px 40px;
+    border-radius: 4px;
+  }
+  .mood-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--gold-lt);
+    margin-bottom: 16px;
+  }
+  .mood-box p { font-size: 16px; line-height: 1.8; opacity: 0.88; margin-bottom: 12px; }
+  .mood-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .mood-tag {
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 4px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: rgba(245,239,224,0.4);
+    text-align: center;
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid rgba(28,23,18,0.15);
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span>METROVILLE · ART DIRECTION</span>
+  <div style="display:flex;gap:24px;">
+    <span style="color:var(--gold-lt);font-weight:bold;">→ Option A</span>
+    <a href="option-b-artnoir.html">Option B</a>
+    <a href="option-c-midcentury.html">Option C</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Option A · Art Direction Moodboard</div>
+  <h1>Haptisches<br><em>Tischspiel</em></h1>
+  <p class="hero-sub">Letterpress · Buchdruck · Materialität · Patina</p>
+</div>
+
+<div class="container">
+
+  <!-- BESCHREIBUNG -->
+  <section>
+    <p class="section-label">Das Konzept</p>
+    <div class="mood-box">
+      <h3>Ein Spiel, das man spüren möchte</h3>
+      <p>Das Spielbrett wirkt wie ein hochwertiger Buchdruck auf schwerem Karton – Letterpress-Prägungen, subtile Papierkörnung, sattes Schwarz auf cremefarbenem Untergrund. Jede Karte sieht aus wie von Hand gesetzt. Farben sind wie Tintenstempel: satt, aber nie digital-grell.</p>
+      <p>Die 3D-Ansicht betont Tiefe und Materialität: das Brett liegt auf einem Holztisch, Spielfiguren werfen weiche Schatten, Würfel haben echtes Gewicht. Kamera-Neigung: ~30° für den klassischen Blick von oben.</p>
+      <div class="mood-tags">
+        <span class="mood-tag">Letterpress</span>
+        <span class="mood-tag">Papierkörnung</span>
+        <span class="mood-tag">Warm & Haptisch</span>
+        <span class="mood-tag">Tischspiel-Feeling</span>
+        <span class="mood-tag">Serif-Typografie</span>
+        <span class="mood-tag">Patina & Alter</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- PALETTE -->
+  <section>
+    <p class="section-label">Farbpalette</p>
+    <h2 class="section-title">Druckfarben auf Pappkarton</h2>
+    <div class="palette">
+      <div class="swatch light" style="background:#F5EFE0">
+        <span>Crème</span><span class="hex">#F5EFE0</span>
+      </div>
+      <div class="swatch light" style="background:#EDE3C8">
+        <span>Pergament</span><span class="hex">#EDE3C8</span>
+      </div>
+      <div class="swatch dark" style="background:#2D5016">
+        <span>Waldgrün</span><span class="hex">#2D5016</span>
+      </div>
+      <div class="swatch dark" style="background:#7B1D2E">
+        <span>Weinrot</span><span class="hex">#7B1D2E</span>
+      </div>
+      <div class="swatch dark" style="background:#C9922A">
+        <span>Gold</span><span class="hex">#C9922A</span>
+      </div>
+      <div class="swatch dark" style="background:#A0380F">
+        <span>Rostrot</span><span class="hex">#A0380F</span>
+      </div>
+      <div class="swatch dark" style="background:#7A9E6C">
+        <span>Salbei</span><span class="hex">#7A9E6C</span>
+      </div>
+      <div class="swatch dark" style="background:#1A2740">
+        <span>Marine</span><span class="hex">#1A2740</span>
+      </div>
+      <div class="swatch dark" style="background:#1C1712">
+        <span>Tinte</span><span class="hex">#1C1712</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- TYPOGRAFIE -->
+  <section>
+    <p class="section-label">Typografie</p>
+    <h2 class="section-title">Playfair Display · Crimson Pro · DM Mono</h2>
+    <div class="type-samples">
+      <div class="type-card">
+        <div class="type-meta">Display · Playfair Display 900</div>
+        <div class="display-sample">MetroVille</div>
+        <div class="display-sample italic">City of Fortune</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Fließtext · Crimson Pro 400 / 300</div>
+        <div class="body-sample">Der Stadtrat hat beschlossen, die Infrastrukturabgabe um 10 % zu erhöhen. Zahle <strong>150 M</strong> an die Stadtkasse.</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">UI / Mono · DM Mono 500</div>
+        <div class="mono-sample">RAUM-CODE: ACDFG<br>SPIELER: 4 / 6<br>RUNDE: 12 / 30</div>
+      </div>
+      <div class="type-card">
+        <div class="type-meta">Zahlen / Preise · Playfair 700</div>
+        <div style="display:grid;gap:8px;">
+          <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--forest);">+2.400 M</div>
+          <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--burgundy);">−850 M</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- BOARD -->
+  <section>
+    <p class="section-label">Spielbrett-Ausschnitt</p>
+    <h2 class="section-title">Letterpress-Brett – 2D-Preview</h2>
+    <p style="margin-bottom:24px;font-style:italic;color:var(--slate);">Im Spiel: 3D/Threlte mit isometrischer Kamera, Holztisch-Oberfläche, weiche Schatten und Tiefenschärfe am Rand.</p>
+    <div style="overflow-x:auto;">
+      <div class="board-preview">
+        <div class="board-inner">
+          <div class="board-grid">
+            <!-- Row 1: Bottom edge (corners + bottom fields) -->
+            <div class="cell corner" style="font-size:7px;text-align:center;">🏛<br>STADTTOR<br><small>START</small></div>
+            <div class="cell forest-bg">Alte Allee</div>
+            <div class="cell">STEUER</div>
+            <div class="cell forest-bg">Lindenweg</div>
+            <div class="cell">EXPRESSKURIER</div>
+            <div class="cell burgundy-bg">Hauptplatz</div>
+            <div class="cell burgundy-bg">Ratsherren­str.</div>
+            <div class="cell">MAGNETSCHWEBE</div>
+            <div class="cell gold-bg">Neon­boulevard</div>
+            <div class="cell gold-bg">Licht­allee</div>
+            <div class="cell corner" style="font-size:7px;">⚡<br>ATOM­REAKTOR</div>
+
+            <!-- Rows 2-10: Left and Right sides -->
+            <div class="cell rust-bg">Hafen­kai</div>
+            <div class="board-center" style="grid-column:2/11;grid-row:2/11;">
+              <div class="center-logo">Metro<em>Ville</em><br>City of Fortune</div>
+              <div class="center-deco"></div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--slate);letter-spacing:0.1em;">RETROFUTURISTISCHE METROPOLE</div>
+            </div>
+            <div class="cell sage-bg">Turm­str.</div>
+
+            <div class="cell rust-bg">Werft­straße</div>
+            <div class="cell navy-bg">Kristall­str.</div>
+            <div class="cell rust-bg">Dock­allee</div>
+            <div class="cell navy-bg">Eis­palast­str.</div>
+            <div class="cell">MAGNETSCHWEBE</div>
+            <div class="cell navy-bg">Polar­blvd.</div>
+            <div class="cell navy-bg">Nord­havn</div>
+            <div class="cell">STADTRAT</div>
+            <div class="cell sage-bg">Garten­str.</div>
+            <div class="cell">MAGNETSCHWEBE</div>
+
+            <!-- Row 11: Top edge -->
+            <div class="cell corner" style="font-size:7px;">🔒<br>SICHER­HEITSZONE</div>
+            <div class="cell sage-bg" style="border-bottom:4px solid var(--sage);border-top:none;">Botani­ker­str.</div>
+            <div class="cell">STADTRAT</div>
+            <div class="cell sage-bg" style="border-bottom:4px solid var(--sage);border-top:none;">Gewächs­haus­weg</div>
+            <div class="cell">STEUER</div>
+            <div class="cell rust-bg" style="border-bottom:4px solid var(--rust);border-top:none;">Hafen­blick</div>
+            <div class="cell rust-bg" style="border-bottom:4px solid var(--rust);border-top:none;">Anker­kai</div>
+            <div class="cell">EXPRESSKURIER</div>
+            <div class="cell burgundy-bg" style="border-bottom:4px solid var(--burgundy);border-top:none;">Rathaus­platz</div>
+            <div class="cell burgundy-bg" style="border-bottom:4px solid var(--burgundy);border-top:none;">Kaiser­str.</div>
+            <div class="cell corner" style="font-size:7px;">🛸<br>RAUM­HAFEN<br>BLVD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- KARTEN -->
+  <section>
+    <p class="section-label">Karten-Design</p>
+    <h2 class="section-title">Grundstück · Expresskurier (Chance)</h2>
+    <div class="cards-row">
+
+      <!-- Property Card -->
+      <div class="game-card">
+        <div class="card-color-band" style="background:var(--forest);"></div>
+        <div class="card-header">Grundstück</div>
+        <div class="card-name">Lindenweg</div>
+        <div class="card-district">Altstadt-Quartier</div>
+        <hr class="card-divider">
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>Kaufpreis</span><span>120 M</span></div>
+          <div class="card-price-row"><span>Miete</span><span>8 M</span></div>
+          <div class="card-price-row"><span>1 Wohnblock</span><span>40 M</span></div>
+          <div class="card-price-row"><span>2 Wohnblöcke</span><span>100 M</span></div>
+          <div class="card-price-row"><span>3 Wohnblöcke</span><span>300 M</span></div>
+          <div class="card-price-row"><span>4 Wohnblöcke</span><span>450 M</span></div>
+          <div class="card-price-row"><span>Wolkenkratzer</span><span>600 M</span></div>
+          <div class="card-price-row"><span>Hypothek</span><span>60 M</span></div>
+        </div>
+        <div class="card-footer">Wohnblock: 50 M · Wolkenkratzer: 250 M</div>
+      </div>
+
+      <!-- Station Card -->
+      <div class="game-card">
+        <div class="card-color-band" style="background:var(--ink);"></div>
+        <div class="card-header">Magnetschwebe</div>
+        <div class="card-name">Bahnhof<br>Nord</div>
+        <div class="card-district">Transportsystem</div>
+        <hr class="card-divider">
+        <div class="card-prices">
+          <div class="card-price-row buy"><span>Kaufpreis</span><span>200 M</span></div>
+          <div class="card-price-row"><span>1 Station</span><span>25 M</span></div>
+          <div class="card-price-row"><span>2 Stationen</span><span>50 M</span></div>
+          <div class="card-price-row"><span>3 Stationen</span><span>100 M</span></div>
+          <div class="card-price-row"><span>4 Stationen</span><span>200 M</span></div>
+          <div class="card-price-row"><span>Hypothek</span><span>100 M</span></div>
+        </div>
+        <div class="card-footer">Alle 4 Stationen: 200 M Miete</div>
+      </div>
+
+      <!-- Chance Card -->
+      <div class="chance-card">
+        <div class="chance-title">Expresskurier</div>
+        <div class="chance-icon">✦</div>
+        <div class="chance-text">«Der Stadtrat ehrt Ihre Verdienste um den öffentlichen Nahverkehr.»</div>
+        <div class="chance-value">+ 150 M</div>
+      </div>
+
+      <!-- Community Chest -->
+      <div class="chance-card" style="background:var(--forest);border-color:var(--gold-lt);">
+        <div class="chance-title">Stadtrat-Beschluss</div>
+        <div class="chance-icon" style="color:var(--gold-lt);">✦</div>
+        <div class="chance-text">«Infrastruktur-Abgabe für alle Hausbesitzer. Wohnblock: 40 M, Wolkenkratzer: 115 M»</div>
+        <div class="chance-value" style="color:var(--gold-lt);">Zahle!</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  MetroVille: City of Fortune · Option A · Haptisches Tischspiel · Art Direction Moodboard
+</footer>
+
+</body>
+</html>
