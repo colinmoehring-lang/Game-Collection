@@ -1,8 +1,10 @@
-import { Server } from 'colyseus';
+import colyseus from 'colyseus';
+const { Server } = colyseus;
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import http from 'http';
 import express from 'express';
 import cors from 'cors';
+import { MultiplayerGameRoom } from './MultiplayerGameRoom.js';
 
 const app = express();
 app.use(cors());
@@ -18,6 +20,9 @@ const gameServer = new Server({
     server
   })
 });
+
+// Register generic multiplayer game room with roomCode filter
+gameServer.define('game_room', MultiplayerGameRoom).filterBy(['roomCode']);
 
 const port = Number(process.env.PORT || 2567);
 server.listen(port, () => {

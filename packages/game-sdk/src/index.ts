@@ -1,4 +1,5 @@
 export * from './types.js';
+export * from './roomCode.js';
 
 /**
  * Deterministic pseudo-random number generator (LCG / Mulberry32) based on string seed.

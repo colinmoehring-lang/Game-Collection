@@ -9,10 +9,15 @@
   },
   "dependencies": {
     "@metroville/game-sdk": "workspace:*",
-    "@metroville/game-tictactoe": "workspace:*"
+    "@metroville/game-tictactoe": "workspace:*",
+    "colyseus.js": "0.15.28",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
-    "vite": "^6.2.0",
-    "typescript": "^5.8.2"
+    "@playwright/test": "^1.63.0",
+    "@types/qrcode": "^1.5.6",
+    "playwright": "^1.63.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0"
   }
 }
