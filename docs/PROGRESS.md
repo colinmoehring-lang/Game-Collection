@@ -12,7 +12,13 @@
   - [x] QR-Code & teilbarer Direktlink
   - [x] Bot-Slot mit Min-Max-Heuristik
   - [x] 3-Session E2E-Multiplayer-Test erfolgreich durchgeführt & Screenshots erfasst
-- [ ] **Etappe 5: MetroVille Regel-Engine + Unit-Tests**
+- [x] **Etappe 5: MetroVille Regel-Engine + Unit-Tests**
+  - [x] 40-Felder-Brett, Presets, Grundstücke, Mieten, Bahnhöfe und Versorgungswerke
+  - [x] Deterministische Würfel- und Kartenstapel anhand des Spiel-Seeds
+  - [x] Kaufen, Hypotheken, gleichmäßiges Bauen/Verkaufen, Gefängnis und Auktionen
+  - [x] 12 fokussierte Unit-Tests inklusive 300 Bot-Simulationspartien
+  - [x] TypeScript-Build des MetroVille-Pakets fehlerfrei
+  - [ ] Handel, vollständige Bot-Integration und Multiplayer-Anbindung folgen in Etappe 7
 - [ ] **Etappe 6: MetroVille Spielbrett & Spiel-UI**
 - [ ] **Etappe 7: Handel, Auktion, Bots, Reconnect**
 - [ ] **Etappe 8: Sound, Animationen, Politur, Barrierefreiheit**
