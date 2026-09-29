@@ -57,7 +57,24 @@ const metroActionBuild = document.getElementById('metro-action-build')!;
 const metroActionSell = document.getElementById('metro-action-sell')!;
 const metroActionMortgage = document.getElementById('metro-action-mortgage')!;
 const metroActionUnmortgage = document.getElementById('metro-action-unmortgage')!;
+const metroTradeTarget = document.getElementById('metro-trade-target') as HTMLSelectElement;
+const metroOfferedMoney = document.getElementById('metro-offered-money') as HTMLInputElement;
+const metroOfferedProperties = document.getElementById('metro-offered-properties') as HTMLSelectElement;
+const metroRequestedMoney = document.getElementById('metro-requested-money') as HTMLInputElement;
+const metroRequestedProperties = document.getElementById('metro-requested-properties') as HTMLSelectElement;
+const metroActionOfferTrade = document.getElementById('metro-action-offer-trade')!;
+const metroTradeStatus = document.getElementById('metro-trade-status')!;
+const metroActionAcceptTrade = document.getElementById('metro-action-accept-trade')!;
+const metroActionDeclineTrade = document.getElementById('metro-action-decline-trade')!;
+const metroAuctionPanel = document.getElementById('metro-auction-panel')!;
+const metroAuctionTitle = document.getElementById('metro-auction-title')!;
+const metroAuctionBidder = document.getElementById('metro-auction-bidder')!;
+const metroAuctionBid = document.getElementById('metro-auction-bid') as HTMLInputElement;
+const metroActionBid = document.getElementById('metro-action-bid')!;
+const metroActionPass = document.getElementById('metro-action-pass')!;
 let selectedPropertyIndex: number | null = null;
+let latestMetroRoomState: any = null;
+let latestMetroRuntimeState: any = null;
 
 // Restore player name
 playerNameInput.value = localStorage.getItem('metroville_player_name') || `Spieler-${Math.floor(100 + Math.random() * 900)}`;
@@ -287,6 +304,8 @@ function renderGame(state: any) {
 function renderMetroville(roomState: any, runtimeState: any) {
   tictactoeGame.hidden = true;
   metrovilleGame.hidden = false;
+  latestMetroRoomState = roomState;
+  latestMetroRuntimeState = runtimeState;
   const mySessionId = currentRoom?.sessionId;
   const currentPlayer = runtimeState.players.find((player: any) => player.id === mySessionId);
   const turnPlayer = runtimeState.players.find((player: any) => player.id === runtimeState.currentTurnPlayerId);
@@ -384,6 +403,9 @@ function renderMetroville(roomState: any, runtimeState: any) {
     metroPlayerList.appendChild(item);
   });
 
+  renderTradeControls(roomState, runtimeState, mySessionId, isMyTurn);
+  renderAuctionControls(roomState, runtimeState, mySessionId);
+
   metroLog.innerHTML = '';
   runtimeState.log.slice(-5).reverse().forEach((entry: string) => {
     const line = document.createElement('p');
@@ -403,6 +425,74 @@ function renderMetroville(roomState: any, runtimeState: any) {
   setMetroActionState(metroActionSell, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.houses > 0));
   setMetroActionState(metroActionMortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && !selectedProperty.isMortgaged));
   setMetroActionState(metroActionUnmortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.isMortgaged));
+}
+
+function renderTradeControls(roomState: any, runtimeState: any, mySessionId: string | undefined, isMyTurn: boolean) {
+  const currentPlayer = runtimeState.players.find((player: any) => player.id === mySessionId);
+  const targets = runtimeState.players.filter((player: any) => player.id !== mySessionId && !player.bankrupt);
+  const selectedTarget = metroTradeTarget.value;
+  metroTradeTarget.innerHTML = '';
+  targets.forEach((player: any) => {
+    const option = document.createElement('option');
+    option.value = player.id;
+    option.textContent = player.name;
+    option.selected = player.id === selectedTarget || (!selectedTarget && player.id === targets[0]?.id);
+    metroTradeTarget.appendChild(option);
+  });
+
+  const target = targets.find((player: any) => player.id === metroTradeTarget.value) || targets[0];
+  populatePropertySelect(metroOfferedProperties, runtimeState, mySessionId);
+  populatePropertySelect(metroRequestedProperties, runtimeState, target?.id);
+
+  const pendingTrade = runtimeState.pendingTrade;
+  const pendingForMe = pendingTrade?.toPlayerId === mySessionId;
+  const canOffer = isMyTurn && roomState.status === 'playing' && runtimeState.phase === 'turn_end' && !pendingTrade && Boolean(target);
+  setMetroActionState(metroActionOfferTrade, canOffer);
+  metroActionAcceptTrade.toggleAttribute('disabled', !pendingForMe);
+  metroActionDeclineTrade.toggleAttribute('disabled', !pendingForMe);
+  if (!pendingTrade) {
+    metroTradeStatus.textContent = currentPlayer ? 'Kein offenes Angebot.' : '';
+  } else if (pendingForMe) {
+    const offerer = runtimeState.players.find((player: any) => player.id === pendingTrade.fromPlayerId);
+    metroTradeStatus.textContent = `Angebot von ${offerer?.name || 'Mitspieler'} wartet auf Antwort.`;
+  } else if (pendingTrade.fromPlayerId === mySessionId) {
+    const recipient = runtimeState.players.find((player: any) => player.id === pendingTrade.toPlayerId);
+    metroTradeStatus.textContent = `Angebot an ${recipient?.name || 'Mitspieler'} wartet.`;
+  } else {
+    metroTradeStatus.textContent = 'Ein Handelsangebot ist offen.';
+  }
+}
+
+function populatePropertySelect(select: HTMLSelectElement, runtimeState: any, ownerId: string | undefined) {
+  select.innerHTML = '';
+  if (!ownerId) return;
+  Object.entries(runtimeState.properties)
+    .filter(([, property]: any) => property.ownerId === ownerId)
+    .forEach(([index]) => {
+      const field = METROVILLE_FIELDS[Number(index)];
+      if (!field) return;
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = field.name;
+      select.appendChild(option);
+    });
+}
+
+function renderAuctionControls(roomState: any, runtimeState: any, mySessionId: string | undefined) {
+  const auction = runtimeState.auction;
+  metroAuctionPanel.toggleAttribute('hidden', !auction);
+  if (!auction) return;
+  const field = METROVILLE_FIELDS[auction.propertyIndex];
+  const bidderId = auction.activePlayerIds[auction.currentBidderIndex];
+  const bidder = runtimeState.players.find((player: any) => player.id === bidderId);
+  metroAuctionTitle.textContent = field?.name || 'Grundstück';
+  metroAuctionBidder.textContent = `${bidder?.name || 'Unbekannt'} ist am Zug · Höchstgebot ${auction.highestBid} Taler`;
+  metroAuctionBid.min = String(Math.max(10, auction.highestBid + 1));
+  if (Number(metroAuctionBid.value) < Number(metroAuctionBid.min)) metroAuctionBid.value = metroAuctionBid.min;
+  const canBid = roomState.status === 'playing' && bidderId === mySessionId;
+  setMetroActionState(metroAuctionBid, canBid);
+  setMetroActionState(metroActionBid, canBid);
+  setMetroActionState(metroActionPass, canBid);
 }
 
 function getMetroGridPosition(index: number) {
@@ -488,6 +578,36 @@ metroActionMortgage.addEventListener('click', () => {
 metroActionUnmortgage.addEventListener('click', () => {
   if (selectedPropertyIndex !== null) sendMetroAction({ type: 'UNMORTGAGE', propertyIndex: selectedPropertyIndex });
 });
+metroTradeTarget.addEventListener('change', () => {
+  if (latestMetroRuntimeState) renderTradeControls(latestMetroRoomState, latestMetroRuntimeState, currentRoom?.sessionId, latestMetroRoomState.currentTurnPlayerId === currentRoom?.sessionId);
+});
+metroActionOfferTrade.addEventListener('click', () => {
+  sendMetroAction({
+    type: 'OFFER_TRADE',
+    offer: {
+      fromPlayerId: currentRoom?.sessionId,
+      toPlayerId: metroTradeTarget.value,
+      offeredMoney: Number(metroOfferedMoney.value) || 0,
+      offeredPropertyIndices: [...metroOfferedProperties.selectedOptions].map(option => Number(option.value)),
+      requestedMoney: Number(metroRequestedMoney.value) || 0,
+      requestedPropertyIndices: [...metroRequestedProperties.selectedOptions].map(option => Number(option.value))
+    }
+  });
+});
+metroActionAcceptTrade.addEventListener('click', () => {
+  if (latestMetroRuntimeState?.pendingTrade) {
+    sendMetroAction({ type: 'ACCEPT_TRADE', tradeId: latestMetroRuntimeState.pendingTrade.id });
+  }
+});
+metroActionDeclineTrade.addEventListener('click', () => {
+  if (latestMetroRuntimeState?.pendingTrade) {
+    sendMetroAction({ type: 'DECLINE_TRADE', tradeId: latestMetroRuntimeState.pendingTrade.id });
+  }
+});
+metroActionBid.addEventListener('click', () => {
+  sendMetroAction({ type: 'BID_AUCTION', bidAmount: Number(metroAuctionBid.value) });
+});
+metroActionPass.addEventListener('click', () => sendMetroAction({ type: 'PASS_AUCTION' }));
 
 btnCopyLink.addEventListener('click', () => {
   navigator.clipboard.writeText(shareLinkInput.value).then(() => {

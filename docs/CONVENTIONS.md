@@ -10,6 +10,8 @@
 - MetroVille state stores `seed` and `randomIndex`; action application must derive random values from these fields and must not use `Math.random()`.
 - State transitions return copied player, property, auction, trade and log data so applying an action does not mutate the previous state.
 - Actions that are planned for a later stage must be rejected by `validateAction` instead of silently changing nothing.
+- Trade offers receive deterministic `trade-N` IDs from state and must be validated for ownership, balances, target player and duplicate properties before they are stored.
+- Server room turn state mirrors the active auction bidder; reconnects must remap session IDs in player order, runtime players, properties and pending trades.
 
 ## Styling & Art Direction (Option C: Mid-Century Modern)
 - Primary fonts: \`Syne\` (700/800) for Display, \`DM Sans\` (300/500) for body, \`DM Mono\` (400/500) for tables and stats.

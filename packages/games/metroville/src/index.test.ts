@@ -159,6 +159,7 @@ describe('MetroVille Rule Engine', () => {
     state = MetrovilleModule.applyAction(state, { type: 'DECLINE_BUY_PROPERTY' });
 
     expect(state.auction?.highestBid).toBe(0);
+    expect(MetrovilleModule.validateAction(state, { type: 'BID_AUCTION', bidAmount: 9 }, 'p1').valid).toBe(false);
     expect(MetrovilleModule.validateAction(state, { type: 'BID_AUCTION', bidAmount: 10 }, 'p1').valid).toBe(true);
     state = MetrovilleModule.applyAction(state, { type: 'BID_AUCTION', bidAmount: 10 });
     state = MetrovilleModule.applyAction(state, { type: 'PASS_AUCTION' });
@@ -166,6 +167,49 @@ describe('MetroVille Rule Engine', () => {
     expect(state.properties[1].ownerId).toBe('p1');
     expect(state.players[0].money).toBe(1490);
     expect(state.auction).toBeNull();
+  });
+
+  it('executes and declines player trades atomically', () => {
+    let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-trade');
+    state.properties[1].ownerId = 'p1';
+    state.properties[3].ownerId = 'p2';
+    state.phase = 'turn_end';
+    const offer = {
+      fromPlayerId: 'p1',
+      toPlayerId: 'p2',
+      offeredMoney: 100,
+      offeredPropertyIndices: [1],
+      requestedMoney: 50,
+      requestedPropertyIndices: [3]
+    };
+
+    expect(MetrovilleModule.validateAction(state, { type: 'OFFER_TRADE', offer }, 'p1').valid).toBe(true);
+    state = MetrovilleModule.applyAction(state, { type: 'OFFER_TRADE', offer });
+    expect(state.pendingTrade?.id).toBe('trade-1');
+    expect(MetrovilleModule.validateAction(state, { type: 'ACCEPT_TRADE', tradeId: 'trade-1' }, 'p2').valid).toBe(true);
+    state = MetrovilleModule.applyAction(state, { type: 'ACCEPT_TRADE', tradeId: 'trade-1' });
+    expect(state.properties[1].ownerId).toBe('p2');
+    expect(state.properties[3].ownerId).toBe('p1');
+    expect(state.players[0].money).toBe(1450);
+    expect(state.players[1].money).toBe(1550);
+    expect(state.pendingTrade).toBeNull();
+
+    state.phase = 'turn_end';
+    expect(MetrovilleModule.validateAction(state, { type: 'OFFER_TRADE', offer }, 'p1').valid).toBe(false);
+  });
+
+  it('declares bankruptcy after emergency mortgages cannot cover debt', () => {
+    let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-bankruptcy');
+    state.properties[1].ownerId = 'p1';
+    state.players[0].money = -100;
+    state.phase = 'turn_end';
+
+    expect(MetrovilleModule.validateAction(state, { type: 'DECLARE_BANKRUPTCY' }, 'p1').valid).toBe(true);
+    state = MetrovilleModule.applyAction(state, { type: 'DECLARE_BANKRUPTCY' });
+    expect(state.players[0].bankrupt).toBe(true);
+    expect(state.properties[1].ownerId).toBeNull();
+    expect(state.winnerId).toBe('p2');
+    expect(state.phase).toBe('gameover');
   });
 
   it('simulates 100 bot games per preset without crashing', async () => {

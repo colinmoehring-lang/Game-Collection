@@ -212,6 +212,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       seed: initialSeed,
       randomIndex: 0,
       turnCount: 0,
+      tradeSequence: 0,
       players: metrovillePlayers,
       playerOrder: metrovillePlayers.map(p => p.id),
       currentTurnPlayerId: metrovillePlayers[0]?.id || '',
@@ -264,6 +265,9 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         return { valid: false, error: 'Du bist nicht an der Reihe beim Bieten' };
       }
       if (action.type === 'BID_AUCTION') {
+        if (!Number.isInteger(action.bidAmount) || action.bidAmount < 10) {
+          return { valid: false, error: 'Mindestgebot beträgt 10 Taler' };
+        }
         if (action.bidAmount <= state.auction.highestBid) {
           return { valid: false, error: 'Gebot muss höher als das aktuelle Höchstgebot sein' };
         }
@@ -275,8 +279,42 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     }
 
     if (action.type === 'ACCEPT_TRADE' || action.type === 'DECLINE_TRADE') {
-      if (!state.pendingTrade || state.pendingTrade.toPlayerId !== playerId) {
+      if (!state.pendingTrade || state.pendingTrade.toPlayerId !== playerId || state.pendingTrade.id !== action.tradeId) {
         return { valid: false, error: 'Kein Angebot für dich vorhanden' };
+      }
+      return { valid: true };
+    }
+
+    if (action.type === 'OFFER_TRADE') {
+      const offer = action.offer;
+      const target = state.players.find(candidate => candidate.id === offer.toPlayerId);
+      const offeredProperties = [...new Set(offer.offeredPropertyIndices)];
+      const requestedProperties = [...new Set(offer.requestedPropertyIndices)];
+      if (state.pendingTrade) return { valid: false, error: 'Es ist bereits ein Angebot offen' };
+      if (state.phase !== 'turn_end' || offer.fromPlayerId !== playerId || !target || target.bankrupt || target.id === playerId) {
+        return { valid: false, error: 'Handel in dieser Situation nicht möglich' };
+      }
+      if (offer.offeredMoney < 0 || offer.requestedMoney < 0 || offer.offeredMoney > player.money) {
+        return { valid: false, error: 'Ungültiger Geldbetrag im Angebot' };
+      }
+      if (offeredProperties.length !== offer.offeredPropertyIndices.length || requestedProperties.length !== offer.requestedPropertyIndices.length) {
+        return { valid: false, error: 'Grundstücke dürfen nicht doppelt angeboten werden' };
+      }
+      if (!offeredProperties.every(index => state.properties[index]?.ownerId === playerId)) {
+        return { valid: false, error: 'Du besitzt nicht alle angebotenen Grundstücke' };
+      }
+      if (!requestedProperties.every(index => state.properties[index]?.ownerId === target.id)) {
+        return { valid: false, error: 'Der Zielspieler besitzt nicht alle angeforderten Grundstücke' };
+      }
+      if (offer.offeredMoney === 0 && offeredProperties.length === 0 && offer.requestedMoney === 0 && requestedProperties.length === 0) {
+        return { valid: false, error: 'Leere Angebote sind nicht erlaubt' };
+      }
+      return { valid: true };
+    }
+
+    if (action.type === 'DECLARE_BANKRUPTCY') {
+      if (state.phase !== 'turn_end' || player.money >= 0) {
+        return { valid: false, error: 'Bankrott kann jetzt nicht erklärt werden' };
       }
       return { valid: true };
     }
@@ -510,6 +548,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         const eligible = s.players.filter(p => !p.bankrupt).map(p => p.id);
         s.auction = {
           propertyIndex: player.position,
+          initiatorId: player.id,
           highestBid: 0,
           highestBidderId: null,
           activePlayerIds: eligible,
@@ -597,6 +636,50 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         prop.isMortgaged = false;
         s.log.push(`✨ ${player.name} löst Hypothek auf ${field.name} für ${cost} Taler ab.`);
       }
+      return s;
+    }
+
+    // OFFER TRADE
+    if (action.type === 'OFFER_TRADE') {
+      s.tradeSequence++;
+      s.pendingTrade = {
+        id: `trade-${s.tradeSequence}`,
+        ...action.offer
+      };
+      const target = s.players.find(candidate => candidate.id === action.offer.toPlayerId);
+      s.log.push(`${player.name} bietet ${target?.name || 'einem Mitspieler'} einen Handel an.`);
+      return s;
+    }
+
+    // ACCEPT TRADE
+    if (action.type === 'ACCEPT_TRADE' && s.pendingTrade) {
+      const trade = s.pendingTrade;
+      const offerer = s.players.find(candidate => candidate.id === trade.fromPlayerId);
+      const recipient = s.players.find(candidate => candidate.id === trade.toPlayerId);
+      if (offerer && recipient) {
+        offerer.money -= trade.offeredMoney;
+        recipient.money += trade.offeredMoney;
+        recipient.money -= trade.requestedMoney;
+        offerer.money += trade.requestedMoney;
+        trade.offeredPropertyIndices.forEach(index => { s.properties[index].ownerId = recipient.id; });
+        trade.requestedPropertyIndices.forEach(index => { s.properties[index].ownerId = offerer.id; });
+        s.log.push(`${recipient.name} nimmt den Handel mit ${offerer.name} an.`);
+      }
+      s.pendingTrade = null;
+      return s;
+    }
+
+    // DECLINE TRADE
+    if (action.type === 'DECLINE_TRADE' && s.pendingTrade) {
+      const recipient = s.players.find(candidate => candidate.id === s.pendingTrade?.toPlayerId);
+      s.log.push(`${recipient?.name || 'Der Zielspieler'} lehnt das Handelsangebot ab.`);
+      s.pendingTrade = null;
+      return s;
+    }
+
+    // DECLARE BANKRUPTCY
+    if (action.type === 'DECLARE_BANKRUPTCY') {
+      checkBankruptcy(s, player);
       return s;
     }
 
@@ -808,5 +891,6 @@ function finishAuction(state: MetrovilleState) {
   }
 
   state.auction = null;
+  state.currentTurnPlayerId = auction.initiatorId;
   state.phase = 'turn_end';
 }

@@ -139,6 +139,36 @@
                 <span class="panel-kicker">STADTPROTOKOLL</span>
                 <div id="metro-log" class="metro-log"></div>
               </div>
+              <div class="metro-trade-panel">
+                <span class="panel-kicker">HANDEL</span>
+                <select id="metro-trade-target" aria-label="Handelspartner"></select>
+                <div class="metro-trade-columns">
+                  <label>Du gibst
+                    <input id="metro-offered-money" type="number" min="0" step="10" value="0" />
+                    <select id="metro-offered-properties" multiple size="3" aria-label="Angebotene Grundstücke"></select>
+                  </label>
+                  <label>Du erhältst
+                    <input id="metro-requested-money" type="number" min="0" step="10" value="0" />
+                    <select id="metro-requested-properties" multiple size="3" aria-label="Angeforderte Grundstücke"></select>
+                  </label>
+                </div>
+                <button class="secondary" id="metro-action-offer-trade">Angebot senden</button>
+                <div id="metro-trade-status" class="metro-trade-status"></div>
+                <div class="metro-trade-response">
+                  <button class="accent" id="metro-action-accept-trade">Annehmen</button>
+                  <button class="secondary" id="metro-action-decline-trade">Ablehnen</button>
+                </div>
+              </div>
+              <div id="metro-auction-panel" class="metro-auction-panel" hidden>
+                <span class="panel-kicker">AUKTION</span>
+                <strong id="metro-auction-title">-</strong>
+                <span id="metro-auction-bidder">-</span>
+                <div class="metro-auction-controls">
+                  <input id="metro-auction-bid" type="number" min="10" step="10" value="10" aria-label="Gebot" />
+                  <button class="accent" id="metro-action-bid">Bieten</button>
+                  <button class="secondary" id="metro-action-pass">Passen</button>
+                </div>
+              </div>
             </aside>
           </div>
         </div>

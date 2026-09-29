@@ -70,6 +70,7 @@ export interface TradeOffer {
 
 export interface AuctionState {
   propertyIndex: number;
+  initiatorId: string;
   highestBid: number;
   highestBidderId: string | null;
   activePlayerIds: string[];
@@ -81,6 +82,7 @@ export interface MetrovilleState {
   seed: string;
   randomIndex: number;
   turnCount: number;
+  tradeSequence: number;
   players: MetrovillePlayer[];
   playerOrder: string[];
   currentTurnPlayerId: string;

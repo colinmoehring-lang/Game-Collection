@@ -114,10 +114,20 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     }
 
     if (existingPlayer) {
+      const previousSessionId = [...this.state.players.entries()]
+        .find(([, player]) => player === existingPlayer)?.[0];
+      if (previousSessionId && previousSessionId !== client.sessionId) {
+        this.state.players.delete(previousSessionId);
+        const orderIndex = this.state.playerOrder.indexOf(previousSessionId);
+        if (orderIndex !== -1) this.state.playerOrder[orderIndex] = client.sessionId;
+        this.remapRuntimePlayerId(previousSessionId, client.sessionId);
+      }
       existingPlayer.isConnected = true;
+      existingPlayer.isBot = false;
       existingPlayer.id = client.sessionId;
-      // Remap sessionId in players Map
       this.state.players.set(client.sessionId, existingPlayer);
+      this.botInstances.delete(previousSessionId || client.sessionId);
+      this.syncTurnPlayerId();
       return;
     }
 
@@ -163,6 +173,12 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       // Reconnect failed or player left on purpose
       console.log(`[Room ${this.state.roomCode}] Reconnect expired for ${player.name}`);
       player.isConnected = false;
+      if (this.state.status === 'playing' && !player.isBot && this.gameModule?.createBot) {
+        player.isBot = true;
+        this.botInstances.set(player.id, this.gameModule.createBot('medium'));
+        this.syncTurnPlayerId();
+        this.triggerBotTurnIfNeeded();
+      }
     }
   }
 
@@ -183,13 +199,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     this.state.status = 'playing';
     this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
 
-    if (this.state.gameId === 'tictactoe') {
-      const turnSymbol = this.runtimeGameState.currentTurn;
-      const turnPlayer = this.runtimeGameState.players[turnSymbol];
-      this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
-    } else if (this.state.gameId === 'metroville') {
-      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
-    }
+    this.syncTurnPlayerId();
 
     this.triggerBotTurnIfNeeded();
   }
@@ -214,13 +224,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       return;
     }
 
-    if (this.state.gameId === 'tictactoe') {
-      const turnSymbol = this.runtimeGameState.currentTurn;
-      const turnPlayer = this.runtimeGameState.players[turnSymbol];
-      this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
-    } else if (this.state.gameId === 'metroville') {
-      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
-    }
+    this.syncTurnPlayerId();
 
     this.triggerBotTurnIfNeeded();
   }
@@ -237,6 +241,49 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
           this.executeAction(botAction, this.state.currentTurnPlayerId);
         }
       }, 500);
+    }
+  }
+
+  private syncTurnPlayerId() {
+    if (!this.runtimeGameState) return;
+    if (this.state.gameId === 'tictactoe') {
+      const turnSymbol = this.runtimeGameState.currentTurn;
+      const turnPlayer = this.runtimeGameState.players[turnSymbol];
+      this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
+      return;
+    }
+    if (this.state.gameId === 'metroville') {
+      const auction = this.runtimeGameState.auction;
+      this.state.currentTurnPlayerId = auction
+        ? auction.activePlayerIds[auction.currentBidderIndex] || ''
+        : this.runtimeGameState.currentTurnPlayerId;
+    }
+  }
+
+  private remapRuntimePlayerId(previousId: string, nextId: string) {
+    if (!this.runtimeGameState) return;
+    if (this.state.gameId === 'tictactoe') {
+      for (const symbol of ['X', 'O'] as const) {
+        if (this.runtimeGameState.players[symbol]?.id === previousId) {
+          this.runtimeGameState.players[symbol].id = nextId;
+        }
+      }
+      return;
+    }
+    if (this.state.gameId === 'metroville') {
+      const player = this.runtimeGameState.players.find((candidate: Player) => candidate.id === previousId);
+      if (player) player.id = nextId;
+      this.runtimeGameState.playerOrder = this.runtimeGameState.playerOrder.map((id: string) => id === previousId ? nextId : id);
+      if (this.runtimeGameState.currentTurnPlayerId === previousId) {
+        this.runtimeGameState.currentTurnPlayerId = nextId;
+      }
+      for (const property of Object.values(this.runtimeGameState.properties) as Array<{ ownerId: string | null }>) {
+        if (property.ownerId === previousId) property.ownerId = nextId;
+      }
+      if (this.runtimeGameState.pendingTrade) {
+        if (this.runtimeGameState.pendingTrade.fromPlayerId === previousId) this.runtimeGameState.pendingTrade.fromPlayerId = nextId;
+        if (this.runtimeGameState.pendingTrade.toPlayerId === previousId) this.runtimeGameState.pendingTrade.toPlayerId = nextId;
+      }
     }
   }
 }
