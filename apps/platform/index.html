@@ -17,6 +17,12 @@
       </div>
       <div class="nav-links">
         <span id="conn-indicator">● Getrennt</span>
+        <button class="header-control" id="audio-toggle" type="button" aria-label="Sound ausschalten" aria-pressed="false" title="Sound ein- oder ausschalten">Sound an</button>
+        <label class="volume-control" for="audio-volume">
+          <span class="visually-hidden">Lautstärke</span>
+          <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.35" aria-label="Lautstärke" />
+        </label>
+        <button class="header-control" id="color-mode-toggle" type="button" aria-label="Farbseh-Hilfe einschalten" aria-pressed="false" title="Farbseh-Hilfe ein- oder ausschalten">Farbhilfe</button>
       </div>
     </header>
 
@@ -94,7 +100,7 @@
           <span class="badge" id="game-room-tag">RAUM</span>
         </div>
 
-        <div class="status-bar" id="game-status-bar">Warte auf Spielzustand...</div>
+        <div class="status-bar" id="game-status-bar" role="status" aria-live="polite">Warte auf Spielzustand...</div>
 
         <div id="tictactoe-game" class="game-surface">
           <div class="tictactoe-board" id="multi-board">

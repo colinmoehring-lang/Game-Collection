@@ -27,3 +27,6 @@
 - The board uses an 11x11 CSS grid with the 40 fields arranged around the outside ring; the center is reserved for turn context and event messaging.
 - The platform renderer keeps game-specific DOM under a dedicated `game-surface` and sends only typed action payloads through the authoritative room.
 - Desktop uses a board/sidebar composition; below 900px the sidebar stacks below the board and below 620px tile content collapses to stable compact labels.
+- Sound is optional and must fail silently when browser audio is blocked; user mute and volume preferences are persisted locally.
+- State feedback uses short, meaningful animations only; every animation must have a `prefers-reduced-motion: reduce` fallback.
+- Interactive controls require visible `:focus-visible` styles, semantic labels/live regions and a non-color-only fallback through text, borders or patterns.

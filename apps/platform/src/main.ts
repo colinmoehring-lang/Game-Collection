@@ -2,6 +2,7 @@ import { Client, Room } from 'colyseus.js';
 import QRCode from 'qrcode';
 import { generateRoomCode } from '@metroville/game-sdk';
 import { METROVILLE_FIELDS } from '@metroville/game-metroville';
+import { audio } from './audio.js';
 
 const BACKEND_URL = window.location.hostname === 'localhost'
   ? 'ws://localhost:2567'
@@ -14,6 +15,9 @@ localStorage.setItem('metroville_session_token', currentSessionToken);
 
 // DOM Elements
 const connIndicator = document.getElementById('conn-indicator')!;
+const audioToggle = document.getElementById('audio-toggle')!;
+const audioVolume = document.getElementById('audio-volume') as HTMLInputElement;
+const colorModeToggle = document.getElementById('color-mode-toggle')!;
 const viewLanding = document.getElementById('view-landing')!;
 const viewLobby = document.getElementById('view-lobby')!;
 const viewGame = document.getElementById('view-game')!;
@@ -75,6 +79,8 @@ const metroActionPass = document.getElementById('metro-action-pass')!;
 let selectedPropertyIndex: number | null = null;
 let latestMetroRoomState: any = null;
 let latestMetroRuntimeState: any = null;
+let previousMetroRuntimeState: any = null;
+let previousTicTacToeMoveCount = 0;
 
 // Restore player name
 playerNameInput.value = localStorage.getItem('metroville_player_name') || `Spieler-${Math.floor(100 + Math.random() * 900)}`;
@@ -90,7 +96,26 @@ function showView(view: 'landing' | 'lobby' | 'game') {
   viewLanding.style.display = view === 'landing' ? 'block' : 'none';
   viewLobby.style.display = view === 'lobby' ? 'block' : 'none';
   viewGame.style.display = view === 'game' ? 'block' : 'none';
+  document.body.dataset.view = view;
 }
+
+function syncAudioControls() {
+  const muted = audio.muted;
+  audioToggle.textContent = muted ? 'Sound aus' : 'Sound an';
+  audioToggle.setAttribute('aria-label', muted ? 'Sound einschalten' : 'Sound ausschalten');
+  audioToggle.setAttribute('aria-pressed', String(!muted));
+  audioVolume.value = String(audio.volume);
+}
+
+function syncColorMode() {
+  const enabled = document.body.classList.contains('colorblind-mode');
+  colorModeToggle.setAttribute('aria-pressed', String(enabled));
+  colorModeToggle.setAttribute('aria-label', enabled ? 'Farbseh-Hilfe ausschalten' : 'Farbseh-Hilfe einschalten');
+}
+
+syncAudioControls();
+if (localStorage.getItem('metroville_color_mode') === 'on') document.body.classList.add('colorblind-mode');
+syncColorMode();
 
 function getPlayerName(): string {
   const name = playerNameInput.value.trim() || 'Spieler';
@@ -147,6 +172,8 @@ function setupRoomListeners(room: Room<any>) {
     connIndicator.textContent = '● Getrennt';
     connIndicator.style.color = 'var(--warm-grey)';
     currentRoom = null;
+    previousMetroRuntimeState = null;
+    previousTicTacToeMoveCount = 0;
     showView('landing');
   });
 }
@@ -264,6 +291,10 @@ function renderGame(state: any) {
   metrovilleGame.hidden = true;
   const mySessionId = currentRoom?.sessionId;
   const isMyTurn = state.currentTurnPlayerId === mySessionId;
+  if (runtimeState.moveHistory.length > previousTicTacToeMoveCount) {
+    audio.play('click');
+    previousTicTacToeMoveCount = runtimeState.moveHistory.length;
+  }
 
   // Status message
   if (state.status === 'gameover') {
@@ -311,6 +342,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
   const turnPlayer = runtimeState.players.find((player: any) => player.id === runtimeState.currentTurnPlayerId);
   const isMyTurn = roomState.currentTurnPlayerId === mySessionId;
   const currentField = currentPlayer ? METROVILLE_FIELDS[currentPlayer.position] : null;
+  playMetroSound(runtimeState);
 
   gameStatusBar.textContent = roomState.status === 'gameover'
     ? `Spiel beendet: ${runtimeState.winReason || 'Endstand erreicht'}`
@@ -329,6 +361,9 @@ function renderMetroville(roomState: any, runtimeState: any) {
     : `Würfel ${runtimeState.dice[0]} + ${runtimeState.dice[1]} · Runde ${runtimeState.turnCount + 1}`;
 
   metroBoard.innerHTML = '';
+  metroBoard.classList.remove('metro-state-change');
+  void metroBoard.offsetWidth;
+  metroBoard.classList.add('metro-state-change');
   const center = document.createElement('div');
   center.className = 'metro-center';
   center.innerHTML = '<span class="metro-center-kicker">METROVILLE</span>';
@@ -342,10 +377,14 @@ function renderMetroville(roomState: any, runtimeState: any) {
   METROVILLE_FIELDS.forEach((field) => {
     const tile = document.createElement('button');
     const property = runtimeState.properties[field.index];
-    tile.className = `metro-tile tile-${field.type}${selectedPropertyIndex === field.index ? ' is-selected' : ''}`;
+    const isCurrentField = currentPlayer?.position === field.index;
+    tile.className = `metro-tile tile-${field.type}${selectedPropertyIndex === field.index ? ' is-selected' : ''}${isCurrentField ? ' is-current' : ''}`;
     tile.style.gridRow = String(getMetroGridPosition(field.index).row);
     tile.style.gridColumn = String(getMetroGridPosition(field.index).column);
     tile.type = 'button';
+    tile.setAttribute('aria-label', `${field.name}${field.cost ? `, ${field.cost} Taler` : ''}${property?.ownerId ? ', besetzt' : ''}`);
+    tile.setAttribute('aria-pressed', String(selectedPropertyIndex === field.index));
+    tile.title = field.name;
     if (field.color) {
       const colorBar = document.createElement('span');
       colorBar.className = 'metro-tile-color';
@@ -376,6 +415,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
         token.className = 'metro-token';
         token.style.backgroundColor = player.color || 'var(--terracotta)';
         token.title = player.name;
+        token.setAttribute('aria-label', player.name);
         tile.appendChild(token);
       });
     tile.addEventListener('click', () => {
@@ -425,6 +465,25 @@ function renderMetroville(roomState: any, runtimeState: any) {
   setMetroActionState(metroActionSell, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.houses > 0));
   setMetroActionState(metroActionMortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && !selectedProperty.isMortgaged));
   setMetroActionState(metroActionUnmortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.isMortgaged));
+}
+
+function playMetroSound(runtimeState: any) {
+  if (!previousMetroRuntimeState) {
+    previousMetroRuntimeState = runtimeState;
+    return;
+  }
+  if (runtimeState.dice[0] !== previousMetroRuntimeState.dice[0] || runtimeState.dice[1] !== previousMetroRuntimeState.dice[1]) {
+    audio.play('roll');
+  }
+  const previousLogLength = previousMetroRuntimeState.log.length;
+  if (runtimeState.log.length > previousLogLength) {
+    const latestLog = runtimeState.log[runtimeState.log.length - 1] || '';
+    if (latestLog.includes('kauft') || latestLog.includes('ersteigert')) audio.play('buy');
+    else if (latestLog.includes('Handel') || latestLog.includes('Handelsangebot')) audio.play('trade');
+    else if (latestLog.includes('Versteigerung') || latestLog.includes('bietet')) audio.play('auction');
+    else if (runtimeState.phase === 'gameover') audio.play('win');
+  }
+  previousMetroRuntimeState = runtimeState;
 }
 
 function renderTradeControls(roomState: any, runtimeState: any, mySessionId: string | undefined, isMyTurn: boolean) {
@@ -557,6 +616,7 @@ btnGameLeave.addEventListener('click', () => {
 });
 
 function sendMetroAction(action: any) {
+  audio.play('click');
   currentRoom?.send('GAME_ACTION', action);
 }
 
@@ -614,4 +674,22 @@ btnCopyLink.addEventListener('click', () => {
     btnCopyLink.textContent = 'Kopiert!';
     setTimeout(() => { btnCopyLink.textContent = 'Link kopieren'; }, 2000);
   });
+});
+
+audioToggle.addEventListener('click', () => {
+  audio.toggleMuted();
+  syncAudioControls();
+  if (!audio.muted) audio.play('click');
+});
+
+audioVolume.addEventListener('input', () => {
+  audio.setVolume(Number(audioVolume.value));
+  syncAudioControls();
+});
+
+colorModeToggle.addEventListener('click', () => {
+  const enabled = !document.body.classList.contains('colorblind-mode');
+  document.body.classList.toggle('colorblind-mode', enabled);
+  localStorage.setItem('metroville_color_mode', enabled ? 'on' : 'off');
+  syncColorMode();
 });
