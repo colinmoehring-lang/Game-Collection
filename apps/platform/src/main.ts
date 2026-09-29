@@ -407,7 +407,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
 
 function getMetroGridPosition(index: number) {
   if (index <= 10) return { row: 11, column: 11 - index };
-  if (index <= 20) return { row: 31 - index, column: 1 };
+  if (index <= 20) return { row: 21 - index, column: 1 };
   if (index <= 30) return { row: 1, column: index - 19 };
   return { row: index - 29, column: 11 };
 }
