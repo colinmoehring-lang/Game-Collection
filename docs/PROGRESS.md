@@ -18,8 +18,13 @@
   - [x] Kaufen, Hypotheken, gleichmäßiges Bauen/Verkaufen, Gefängnis und Auktionen
   - [x] 12 fokussierte Unit-Tests inklusive 300 Bot-Simulationspartien
   - [x] TypeScript-Build des MetroVille-Pakets fehlerfrei
-  - [ ] Handel, vollständige Bot-Integration und Multiplayer-Anbindung folgen in Etappe 7
-- [ ] **Etappe 6: MetroVille Spielbrett & Spiel-UI**
+  - [ ] Handel und Reconnect folgen in Etappe 7
+- [x] **Etappe 6: MetroVille Spielbrett & Spiel-UI**
+  - [x] MetroVille als auswählbares Spielmodul in Lobby, Server und Plattform verdrahtet
+  - [x] Responsives 40-Felder-Randbrett mit Besitzmarkern, Spielfiguren und Spielerübersicht
+  - [x] Aktionsleiste für Würfeln, Kaufen, Passen, Zugabschluss, Gefängnis und Gebäude/Hypotheken
+  - [x] Stadtprotokoll, Zugstatus und Desktop-/Mobile-Layout geprüft
+  - [ ] Handel, Auktionserweiterung, Reconnect und vollständige Bot-Flows folgen in Etappe 7
 - [ ] **Etappe 7: Handel, Auktion, Bots, Reconnect**
 - [ ] **Etappe 8: Sound, Animationen, Politur, Barrierefreiheit**
 - [ ] **Etappe 9: Tests, README, Abschluss**

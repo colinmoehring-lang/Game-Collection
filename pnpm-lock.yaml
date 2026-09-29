@@ -181,6 +181,9 @@ importers:
 
   apps/platform:
     dependencies:
+      '@metroville/game-metroville':
+        specifier: workspace:*
+        version: link:../../packages/games/metroville
       '@metroville/game-sdk':
         specifier: workspace:*
         version: link:../../packages/game-sdk
@@ -221,6 +224,9 @@ importers:
       '@colyseus/ws-transport':
         specifier: 0.15.3
         version: 0.15.3(@colyseus/core@0.15.57(@colyseus/schema@2.0.35))(@colyseus/schema@2.0.35)
+      '@metroville/game-metroville':
+        specifier: workspace:*
+        version: link:../../packages/games/metroville
       '@metroville/game-sdk':
         specifier: workspace:*
         version: link:../../packages/game-sdk

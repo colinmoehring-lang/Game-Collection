@@ -31,6 +31,14 @@
           <input type="text" id="player-name-input" placeholder="z. B. Alice" />
         </div>
 
+        <div class="form-group">
+          <label for="game-select">Spielmodus</label>
+          <select id="game-select">
+            <option value="metroville">MetroVille: City of Fortune</option>
+            <option value="tictactoe">Tic-Tac-Toe</option>
+          </select>
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
           <div style="border-right: 1px dashed var(--charcoal); padding-right: 20px;">
             <label>Neuen Raum erstellen</label>
@@ -88,8 +96,51 @@
 
         <div class="status-bar" id="game-status-bar">Warte auf Spielzustand...</div>
 
-        <div class="tictactoe-board" id="multi-board">
+        <div id="tictactoe-game" class="game-surface">
+          <div class="tictactoe-board" id="multi-board">
           <!-- 3x3 Zellen -->
+          </div>
+        </div>
+
+        <div id="metroville-game" class="game-surface" hidden>
+          <div class="metro-layout">
+            <div class="metro-board-shell">
+              <div class="metro-board" id="metro-board">
+                <div class="metro-center">
+                  <span class="metro-center-kicker">METROVILLE</span>
+                  <strong id="metro-center-title">Stadt der Möglichkeiten</strong>
+                  <span id="metro-center-detail">Warte auf den ersten Zug.</span>
+                </div>
+              </div>
+            </div>
+            <aside class="metro-sidebar" aria-label="Spielinformationen">
+              <div class="metro-turn-panel">
+                <span class="panel-kicker">AM ZUG</span>
+                <strong id="metro-turn-name">-</strong>
+                <span id="metro-turn-phase">Würfel bereit</span>
+              </div>
+              <div class="metro-player-list" id="metro-player-list"></div>
+              <div class="metro-action-panel">
+                <span class="panel-kicker">AKTIONEN</span>
+                <div class="metro-action-grid">
+                  <button class="primary" id="metro-action-roll">Würfeln</button>
+                  <button class="accent" id="metro-action-buy">Kaufen</button>
+                  <button class="secondary" id="metro-action-decline">Passen</button>
+                  <button class="secondary" id="metro-action-end">Zug beenden</button>
+                  <button class="secondary" id="metro-action-jail-fine">50 Taler zahlen</button>
+                  <button class="secondary" id="metro-action-jail-card">Freikarte nutzen</button>
+                  <button class="secondary" id="metro-action-build">Gebäude bauen</button>
+                  <button class="secondary" id="metro-action-sell">Gebäude verkaufen</button>
+                  <button class="secondary" id="metro-action-mortgage">Beleihen</button>
+                  <button class="secondary" id="metro-action-unmortgage">Auslösen</button>
+                </div>
+              </div>
+              <div class="metro-event-panel">
+                <span class="panel-kicker">STADTPROTOKOLL</span>
+                <div id="metro-log" class="metro-log"></div>
+              </div>
+            </aside>
+          </div>
         </div>
 
         <div class="btn-row" style="justify-content: center; margin-top: 16px;">

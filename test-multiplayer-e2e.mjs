@@ -17,6 +17,7 @@ async function runMultiplayerTest() {
     console.log('1. Host A opens http://localhost:5173');
     await pageA.goto('http://localhost:5173');
     await pageA.fill('#player-name-input', 'Host Alice');
+    await pageA.selectOption('#game-select', 'tictactoe');
     await pageA.click('#btn-create-room');
 
     // Wait for Lobby view and get room code

@@ -20,3 +20,8 @@
   - Sky Blue: \`#3B7FC4\`
   - Sand background: \`#F7F0E3\`
   - Paper card background: \`#EEE4CE\`
+
+## MetroVille UI
+- The board uses an 11x11 CSS grid with the 40 fields arranged around the outside ring; the center is reserved for turn context and event messaging.
+- The platform renderer keeps game-specific DOM under a dedicated `game-surface` and sends only typed action payloads through the authoritative room.
+- Desktop uses a board/sidebar composition; below 900px the sidebar stacks below the board and below 620px tile content collapses to stable compact labels.

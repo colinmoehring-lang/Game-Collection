@@ -61,6 +61,8 @@ export const MetrovilleManifest: GameManifest = {
   ]
 };
 
+export { METROVILLE_FIELDS, DISTRICT_MAP } from './board.js';
+
 export function calculateRent(fieldIndex: number, state: MetrovilleState): number {
   const field = METROVILLE_FIELDS[fieldIndex];
   const prop = state.properties[fieldIndex];

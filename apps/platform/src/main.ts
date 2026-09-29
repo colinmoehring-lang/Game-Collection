@@ -1,6 +1,7 @@
 import { Client, Room } from 'colyseus.js';
 import QRCode from 'qrcode';
 import { generateRoomCode } from '@metroville/game-sdk';
+import { METROVILLE_FIELDS } from '@metroville/game-metroville';
 
 const BACKEND_URL = window.location.hostname === 'localhost'
   ? 'ws://localhost:2567'
@@ -19,6 +20,7 @@ const viewGame = document.getElementById('view-game')!;
 
 const playerNameInput = document.getElementById('player-name-input') as HTMLInputElement;
 const roomCodeInput = document.getElementById('room-code-input') as HTMLInputElement;
+const gameSelect = document.getElementById('game-select') as HTMLSelectElement;
 const btnCreateRoom = document.getElementById('btn-create-room')!;
 const btnJoinRoom = document.getElementById('btn-join-room')!;
 
@@ -33,8 +35,29 @@ const btnStartGame = document.getElementById('btn-start-game')!;
 const btnLeaveRoom = document.getElementById('btn-leave-room')!;
 
 const gameStatusBar = document.getElementById('game-status-bar')!;
+const gameTitleHeader = document.getElementById('game-title-header')!;
+const tictactoeGame = document.getElementById('tictactoe-game')!;
+const metrovilleGame = document.getElementById('metroville-game')!;
 const multiBoard = document.getElementById('multi-board')!;
+const metroBoard = document.getElementById('metro-board')!;
+const metroTurnName = document.getElementById('metro-turn-name')!;
+const metroTurnPhase = document.getElementById('metro-turn-phase')!;
+const metroCenterTitle = document.getElementById('metro-center-title')!;
+const metroCenterDetail = document.getElementById('metro-center-detail')!;
+const metroPlayerList = document.getElementById('metro-player-list')!;
+const metroLog = document.getElementById('metro-log')!;
 const btnGameLeave = document.getElementById('btn-game-leave')!;
+const metroActionRoll = document.getElementById('metro-action-roll')!;
+const metroActionBuy = document.getElementById('metro-action-buy')!;
+const metroActionDecline = document.getElementById('metro-action-decline')!;
+const metroActionEnd = document.getElementById('metro-action-end')!;
+const metroActionJailFine = document.getElementById('metro-action-jail-fine')!;
+const metroActionJailCard = document.getElementById('metro-action-jail-card')!;
+const metroActionBuild = document.getElementById('metro-action-build')!;
+const metroActionSell = document.getElementById('metro-action-sell')!;
+const metroActionMortgage = document.getElementById('metro-action-mortgage')!;
+const metroActionUnmortgage = document.getElementById('metro-action-unmortgage')!;
+let selectedPropertyIndex: number | null = null;
 
 // Restore player name
 playerNameInput.value = localStorage.getItem('metroville_player_name') || `Spieler-${Math.floor(100 + Math.random() * 900)}`;
@@ -65,7 +88,7 @@ async function joinRoom(roomCode: string, isCreate: boolean = false) {
 
     const options = {
       roomCode: roomCode.toUpperCase(),
-      gameId: 'tictactoe',
+      gameId: gameSelect.value,
       name: getPlayerName(),
       sessionToken: currentSessionToken
     };
@@ -215,6 +238,13 @@ function renderGame(state: any) {
     return;
   }
 
+  if (state.gameId === 'metroville') {
+    renderMetroville(state, runtimeState);
+    return;
+  }
+
+  tictactoeGame.hidden = false;
+  metrovilleGame.hidden = true;
   const mySessionId = currentRoom?.sessionId;
   const isMyTurn = state.currentTurnPlayerId === mySessionId;
 
@@ -254,6 +284,149 @@ function renderGame(state: any) {
   });
 }
 
+function renderMetroville(roomState: any, runtimeState: any) {
+  tictactoeGame.hidden = true;
+  metrovilleGame.hidden = false;
+  const mySessionId = currentRoom?.sessionId;
+  const currentPlayer = runtimeState.players.find((player: any) => player.id === mySessionId);
+  const turnPlayer = runtimeState.players.find((player: any) => player.id === runtimeState.currentTurnPlayerId);
+  const isMyTurn = roomState.currentTurnPlayerId === mySessionId;
+  const currentField = currentPlayer ? METROVILLE_FIELDS[currentPlayer.position] : null;
+
+  gameStatusBar.textContent = roomState.status === 'gameover'
+    ? `Spiel beendet: ${runtimeState.winReason || 'Endstand erreicht'}`
+    : isMyTurn
+      ? 'Du bist am Zug.'
+      : `Warten auf ${turnPlayer?.name || 'den nächsten Spieler'}.`;
+
+  gameTitleHeader.textContent = 'MetroVille: City of Fortune';
+  metroTurnName.textContent = turnPlayer?.name || 'Unbekannt';
+  metroTurnPhase.textContent = formatMetroPhase(runtimeState.phase);
+  metroCenterTitle.textContent = runtimeState.phase === 'gameover'
+    ? 'Die Stadt hat entschieden'
+    : currentField?.name || 'Stadt der Möglichkeiten';
+  metroCenterDetail.textContent = runtimeState.phase === 'gameover'
+    ? runtimeState.winReason || 'Spiel beendet'
+    : `Würfel ${runtimeState.dice[0]} + ${runtimeState.dice[1]} · Runde ${runtimeState.turnCount + 1}`;
+
+  metroBoard.innerHTML = '';
+  const center = document.createElement('div');
+  center.className = 'metro-center';
+  center.innerHTML = '<span class="metro-center-kicker">METROVILLE</span>';
+  const centerTitle = document.createElement('strong');
+  centerTitle.textContent = metroCenterTitle.textContent;
+  const centerDetail = document.createElement('span');
+  centerDetail.textContent = metroCenterDetail.textContent;
+  center.append(centerTitle, centerDetail);
+  metroBoard.appendChild(center);
+
+  METROVILLE_FIELDS.forEach((field) => {
+    const tile = document.createElement('button');
+    const property = runtimeState.properties[field.index];
+    tile.className = `metro-tile tile-${field.type}${selectedPropertyIndex === field.index ? ' is-selected' : ''}`;
+    tile.style.gridRow = String(getMetroGridPosition(field.index).row);
+    tile.style.gridColumn = String(getMetroGridPosition(field.index).column);
+    tile.type = 'button';
+    if (field.color) {
+      const colorBar = document.createElement('span');
+      colorBar.className = 'metro-tile-color';
+      colorBar.style.backgroundColor = field.color;
+      tile.appendChild(colorBar);
+    }
+    const tileIndex = document.createElement('span');
+    tileIndex.className = 'metro-tile-index';
+    tileIndex.textContent = String(field.index).padStart(2, '0');
+    const tileName = document.createElement('strong');
+    tileName.textContent = field.name;
+    tile.append(tileIndex, tileName);
+    if (field.cost) {
+      const tileCost = document.createElement('span');
+      tileCost.className = 'metro-tile-cost';
+      tileCost.textContent = `${field.cost} Taler`;
+      tile.appendChild(tileCost);
+    }
+    if (property?.ownerId) {
+      const owner = runtimeState.players.find((player: any) => player.id === property.ownerId);
+      tile.dataset.owner = owner?.name || 'Belegt';
+      tile.style.setProperty('--owner-color', owner?.color || 'var(--charcoal)');
+    }
+    runtimeState.players
+      .filter((player: any) => player.position === field.index && !player.bankrupt)
+      .forEach((player: any) => {
+        const token = document.createElement('span');
+        token.className = 'metro-token';
+        token.style.backgroundColor = player.color || 'var(--terracotta)';
+        token.title = player.name;
+        tile.appendChild(token);
+      });
+    tile.addEventListener('click', () => {
+      selectedPropertyIndex = property ? field.index : null;
+      renderMetroville(roomState, runtimeState);
+    });
+    metroBoard.appendChild(tile);
+  });
+
+  metroPlayerList.innerHTML = '';
+  runtimeState.players.forEach((player: any) => {
+    const item = document.createElement('div');
+    item.className = `metro-player ${player.id === runtimeState.currentTurnPlayerId ? 'is-turn' : ''}`;
+    const propertyCount = Object.values(runtimeState.properties)
+      .filter((property: any) => property.ownerId === player.id).length;
+    item.innerHTML = `<span class="metro-player-swatch" style="background:${player.color || 'var(--terracotta)'}"></span>`;
+    const details = document.createElement('span');
+    details.className = 'metro-player-details';
+    const name = document.createElement('strong');
+    name.textContent = player.name;
+    const stats = document.createElement('small');
+    stats.textContent = `${player.money} Taler · ${propertyCount} Grundstücke`;
+    details.append(name, stats);
+    item.appendChild(details);
+    metroPlayerList.appendChild(item);
+  });
+
+  metroLog.innerHTML = '';
+  runtimeState.log.slice(-5).reverse().forEach((entry: string) => {
+    const line = document.createElement('p');
+    line.textContent = entry;
+    metroLog.appendChild(line);
+  });
+
+  const canAct = isMyTurn && roomState.status === 'playing';
+  const selectedProperty = selectedPropertyIndex === null ? null : runtimeState.properties[selectedPropertyIndex];
+  setMetroActionState(metroActionRoll, canAct && runtimeState.phase === 'roll');
+  setMetroActionState(metroActionBuy, canAct && runtimeState.phase === 'tile_action' && Boolean(currentField?.cost && !runtimeState.properties[currentPlayer?.position]?.ownerId));
+  setMetroActionState(metroActionDecline, canAct && runtimeState.phase === 'tile_action');
+  setMetroActionState(metroActionEnd, canAct && runtimeState.phase === 'turn_end');
+  setMetroActionState(metroActionJailFine, canAct && currentPlayer?.inJail === true);
+  setMetroActionState(metroActionJailCard, canAct && currentPlayer?.inJail === true && currentPlayer.getOutOfJailCards > 0);
+  setMetroActionState(metroActionBuild, canAct && Boolean(selectedProperty?.ownerId === mySessionId));
+  setMetroActionState(metroActionSell, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.houses > 0));
+  setMetroActionState(metroActionMortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && !selectedProperty.isMortgaged));
+  setMetroActionState(metroActionUnmortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.isMortgaged));
+}
+
+function getMetroGridPosition(index: number) {
+  if (index <= 10) return { row: 11, column: 11 - index };
+  if (index <= 20) return { row: 31 - index, column: 1 };
+  if (index <= 30) return { row: 1, column: index - 19 };
+  return { row: index - 29, column: 11 };
+}
+
+function formatMetroPhase(phase: string) {
+  const labels: Record<string, string> = {
+    roll: 'Würfel bereit',
+    tile_action: 'Feldaktion wählen',
+    turn_end: 'Zug abschließen',
+    auction: 'Auktion läuft',
+    gameover: 'Spiel beendet'
+  };
+  return labels[phase] || phase;
+}
+
+function setMetroActionState(button: HTMLElement, enabled: boolean) {
+  button.toggleAttribute('disabled', !enabled);
+}
+
 // Event Listeners
 btnCreateRoom.addEventListener('click', () => {
   const code = generateRoomCode();
@@ -291,6 +464,29 @@ btnLeaveRoom.addEventListener('click', () => {
 
 btnGameLeave.addEventListener('click', () => {
   currentRoom?.leave();
+});
+
+function sendMetroAction(action: any) {
+  currentRoom?.send('GAME_ACTION', action);
+}
+
+metroActionRoll.addEventListener('click', () => sendMetroAction({ type: 'ROLL_DICE' }));
+metroActionBuy.addEventListener('click', () => sendMetroAction({ type: 'BUY_PROPERTY' }));
+metroActionDecline.addEventListener('click', () => sendMetroAction({ type: 'DECLINE_BUY_PROPERTY' }));
+metroActionEnd.addEventListener('click', () => sendMetroAction({ type: 'END_TURN' }));
+metroActionJailFine.addEventListener('click', () => sendMetroAction({ type: 'PAY_JAIL_FINE' }));
+metroActionJailCard.addEventListener('click', () => sendMetroAction({ type: 'USE_JAIL_CARD' }));
+metroActionBuild.addEventListener('click', () => {
+  if (selectedPropertyIndex !== null) sendMetroAction({ type: 'BUILD_HOUSE', propertyIndex: selectedPropertyIndex });
+});
+metroActionSell.addEventListener('click', () => {
+  if (selectedPropertyIndex !== null) sendMetroAction({ type: 'SELL_HOUSE', propertyIndex: selectedPropertyIndex });
+});
+metroActionMortgage.addEventListener('click', () => {
+  if (selectedPropertyIndex !== null) sendMetroAction({ type: 'MORTGAGE', propertyIndex: selectedPropertyIndex });
+});
+metroActionUnmortgage.addEventListener('click', () => {
+  if (selectedPropertyIndex !== null) sendMetroAction({ type: 'UNMORTGAGE', propertyIndex: selectedPropertyIndex });
 });
 
 btnCopyLink.addEventListener('click', () => {

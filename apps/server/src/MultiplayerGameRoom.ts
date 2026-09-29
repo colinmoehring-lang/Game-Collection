@@ -3,9 +3,11 @@ import type { Client } from 'colyseus';
 const { Room } = colyseus;
 import { GameRoomState, PlayerSchema } from './schema/GameRoomState.js';
 import { generateRoomCode, type GameModule, type Player } from '@metroville/game-sdk';
+import { MetrovilleModule } from '@metroville/game-metroville';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
 
 const GAME_MODULES: Record<string, GameModule<any, any>> = {
+  [MetrovilleModule.manifest.id]: MetrovilleModule,
   [TicTacToeModule.manifest.id]: TicTacToeModule
 };
 
@@ -185,6 +187,8 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       const turnSymbol = this.runtimeGameState.currentTurn;
       const turnPlayer = this.runtimeGameState.players[turnSymbol];
       this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
+    } else if (this.state.gameId === 'metroville') {
+      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
     }
 
     this.triggerBotTurnIfNeeded();
@@ -214,6 +218,8 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       const turnSymbol = this.runtimeGameState.currentTurn;
       const turnPlayer = this.runtimeGameState.players[turnSymbol];
       this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
+    } else if (this.state.gameId === 'metroville') {
+      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
     }
 
     this.triggerBotTurnIfNeeded();

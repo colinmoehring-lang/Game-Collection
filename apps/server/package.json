@@ -11,6 +11,7 @@
     "@colyseus/schema": "2.0.35",
     "@colyseus/tools": "0.15.8",
     "@colyseus/ws-transport": "0.15.3",
+    "@metroville/game-metroville": "workspace:*",
     "@metroville/game-sdk": "workspace:*",
     "@metroville/game-tictactoe": "workspace:*",
     "colyseus": "0.15.57",
