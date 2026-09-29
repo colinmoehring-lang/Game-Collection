@@ -58,6 +58,9 @@ const metroCardDrawTitle = document.getElementById('metro-card-draw-title')!;
 const metroCardDrawText = document.getElementById('metro-card-draw-text')!;
 const metroPropertyCards = document.getElementById('metro-property-cards')!;
 const metroCardShelfCount = document.getElementById('metro-card-shelf-count')!;
+const metroPropertyOverlay = document.getElementById('metro-property-overlay')!;
+const metroPropertyOverlayCard = document.getElementById('metro-property-overlay-card')!;
+const metroPropertyClose = document.getElementById('metro-property-close')!;
 const metroPlayerList = document.getElementById('metro-player-list')!;
 const metroLog = document.getElementById('metro-log')!;
 const btnGameLeave = document.getElementById('btn-game-leave')!;
@@ -436,8 +439,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
         tile.appendChild(token);
       });
     tile.addEventListener('click', () => {
-      selectedPropertyIndex = property ? field.index : null;
-      selectMetroProperty(field.index);
+        if (property) openPropertyOverlay(field.index);
     });
     metroBoard.appendChild(tile);
   });
@@ -504,61 +506,77 @@ function renderPropertyCards(runtimeState: any, playerId: string | undefined) {
   const ownedIndices = Object.entries(runtimeState.properties)
     .filter(([, property]: any) => property.ownerId === playerId)
     .map(([index]) => Number(index));
-  const selectedIndex = selectedPropertyIndex !== null && runtimeState.properties[selectedPropertyIndex]
-    ? selectedPropertyIndex
-    : null;
-  const cardIndices = selectedIndex !== null && !ownedIndices.includes(selectedIndex)
-    ? [selectedIndex, ...ownedIndices]
-    : ownedIndices;
   metroCardShelfCount.textContent = `${ownedIndices.length} Grundstück${ownedIndices.length === 1 ? '' : 'e'}`;
   metroPropertyCards.innerHTML = '';
-  if (cardIndices.length === 0) {
+  if (ownedIndices.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'metro-card-empty';
-    empty.textContent = 'Klicke ein Feld an, um seine Karte zu öffnen.';
+    empty.textContent = 'Deine erworbenen Grundstücke erscheinen hier.';
     metroPropertyCards.appendChild(empty);
     return;
   }
-  cardIndices.forEach((index) => {
-    const field = METROVILLE_FIELDS[index];
-    const property = runtimeState.properties[index];
-    if (!field || !property) return;
-    const card = document.createElement('article');
-    card.className = `metro-property-card${index === selectedPropertyIndex ? ' is-detail' : ''}`;
-    card.dataset.propertyIndex = String(index);
-    card.tabIndex = 0;
-    card.setAttribute('aria-label', `Grundstückskarte ${field.name}`);
-    card.innerHTML = `<div class="property-card-strip" style="background:${field.color || 'var(--charcoal)'}"></div>`;
-    const header = document.createElement('div');
-    header.className = 'property-card-header';
-    header.textContent = field.type === 'station' ? 'BAHNHOF' : field.type === 'utility' ? 'VERSORGUNG' : 'GRUNDSTÜCK';
-    const name = document.createElement('h3');
-    name.textContent = field.name;
-    const district = document.createElement('p');
-    district.className = 'property-card-district';
-    district.textContent = field.district || 'MetroVille';
-    const prices = document.createElement('div');
-    prices.className = 'property-card-prices';
-    addPropertyPrice(prices, 'Kaufpreis', field.cost ? `${field.cost} Taler` : '-');
-    addPropertyPrice(prices, 'Miete', field.baseRent ? `${field.baseRent} Taler` : '-');
-    if (field.rents && field.type === 'property') {
-      addPropertyPrice(prices, 'Ausbau', `${property.houses} / 5`);
-      addPropertyPrice(prices, 'Aktuelle Miete', `${field.rents[property.houses] || field.rents[0]} Taler`);
-    }
-    const footer = document.createElement('div');
-    footer.className = 'property-card-footer';
-    footer.textContent = field.houseCost ? `Wohnblock: ${field.houseCost} Taler · Hypothek: ${Math.round((field.cost || 0) * 0.5)} Taler` : 'Hypothek nicht verfügbar';
-    card.append(header, name, district, prices, footer);
-    const selectCard = () => selectMetroProperty(index);
-    card.addEventListener('click', selectCard);
+  ownedIndices.forEach((index) => {
+    const card = createPropertyCard(runtimeState, index);
+    card.addEventListener('click', () => openPropertyOverlay(index));
     card.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        selectCard();
+        openPropertyOverlay(index);
       }
     });
     metroPropertyCards.appendChild(card);
   });
+}
+
+function createPropertyCard(runtimeState: any, index: number) {
+  const field = METROVILLE_FIELDS[index];
+  const property = runtimeState.properties[index];
+  const card = document.createElement('article');
+  card.className = 'metro-property-card';
+  card.dataset.propertyIndex = String(index);
+  card.tabIndex = 0;
+  card.setAttribute('aria-label', `Grundstückskarte ${field.name}`);
+  card.innerHTML = `<div class="property-card-strip" style="background:${field.color || 'var(--charcoal)'}"></div>`;
+  const header = document.createElement('div');
+  header.className = 'property-card-header';
+  header.textContent = field.type === 'station' ? 'BAHNHOF' : field.type === 'utility' ? 'VERSORGUNG' : 'GRUNDSTÜCK';
+  const name = document.createElement('h3');
+  name.textContent = field.name;
+  const district = document.createElement('p');
+  district.className = 'property-card-district';
+  district.textContent = field.district || 'MetroVille';
+  const prices = document.createElement('div');
+  prices.className = 'property-card-prices';
+  addPropertyPrice(prices, 'Kaufpreis', field.cost ? `${field.cost} Taler` : '-');
+  addPropertyPrice(prices, 'Miete', field.baseRent ? `${field.baseRent} Taler` : '-');
+  if (field.rents && field.type === 'property') {
+    addPropertyPrice(prices, 'Ausbau', `${property.houses} / 5`);
+    addPropertyPrice(prices, 'Aktuelle Miete', `${field.rents[property.houses] || field.rents[0]} Taler`);
+  }
+  const footer = document.createElement('div');
+  footer.className = 'property-card-footer';
+  footer.textContent = field.houseCost ? `Wohnblock: ${field.houseCost} Taler · Hypothek: ${Math.round((field.cost || 0) * 0.5)} Taler` : 'Hypothek nicht verfügbar';
+  card.append(header, name, district, prices, footer);
+  return card;
+}
+
+function openPropertyOverlay(propertyIndex: number) {
+  if (!latestMetroRuntimeState?.properties[propertyIndex]) return;
+  selectedPropertyIndex = propertyIndex;
+  selectMetroProperty(propertyIndex);
+  metroPropertyOverlayCard.innerHTML = '';
+  const card = createPropertyCard(latestMetroRuntimeState, propertyIndex);
+  card.classList.add('is-detail');
+  card.tabIndex = -1;
+  metroPropertyOverlayCard.appendChild(card);
+  metroPropertyOverlay.hidden = false;
+  document.body.classList.add('overlay-open');
+  metroPropertyClose.focus();
+}
+
+function closePropertyOverlay() {
+  metroPropertyOverlay.hidden = true;
+  document.body.classList.remove('overlay-open');
 }
 
 function addPropertyPrice(container: HTMLElement, label: string, value: string) {
@@ -813,6 +831,13 @@ metroActionBid.addEventListener('click', () => {
   sendMetroAction({ type: 'BID_AUCTION', bidAmount: Number(metroAuctionBid.value) });
 });
 metroActionPass.addEventListener('click', () => sendMetroAction({ type: 'PASS_AUCTION' }));
+metroPropertyClose.addEventListener('click', closePropertyOverlay);
+metroPropertyOverlay.addEventListener('click', (event) => {
+  if (event.target === metroPropertyOverlay) closePropertyOverlay();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !metroPropertyOverlay.hidden) closePropertyOverlay();
+});
 
 btnCopyLink.addEventListener('click', () => {
   navigator.clipboard.writeText(shareLinkInput.value).then(() => {

@@ -870,6 +870,57 @@ button.danger {
   font-size: 10px;
 }
 
+.metro-property-overlay[hidden] {
+  display: none;
+}
+
+.metro-property-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(28, 25, 23, 0.72);
+  animation: overlay-in 160ms ease-out;
+}
+
+.metro-property-dialog {
+  position: relative;
+  width: min(390px, 100%);
+  padding: 42px 24px 24px;
+  border: 2px solid var(--charcoal);
+  background: var(--paper);
+  box-shadow: 8px 8px 0 var(--charcoal);
+}
+
+.metro-property-dialog .metro-property-card {
+  width: 100%;
+  min-width: 0;
+  cursor: default;
+  transform: none;
+  box-shadow: 4px 4px 0 var(--charcoal);
+  outline: 0;
+}
+
+.metro-property-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 9px;
+  background: var(--cream);
+  font-size: 10px;
+}
+
+body.overlay-open {
+  overflow: hidden;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .metro-dice {
   display: flex;
   gap: 10px;
