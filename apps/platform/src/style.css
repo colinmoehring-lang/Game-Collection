@@ -30,6 +30,8 @@ html {
 body {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--sand);
+  background-image: radial-gradient(rgba(28, 25, 23, 0.07) 0.65px, transparent 0.65px);
+  background-size: 6px 6px;
   color: var(--ink);
   min-height: 100vh;
   display: flex;
@@ -118,6 +120,8 @@ main {
 
 .card {
   background: var(--cream);
+  background-image: radial-gradient(rgba(28, 25, 23, 0.04) 0.6px, transparent 0.6px);
+  background-size: 6px 6px;
   border: 2px solid var(--charcoal);
   border-radius: 12px;
   padding: 24px;
@@ -395,6 +399,8 @@ button.danger {
   min-width: 0;
   padding: 14px;
   background: var(--paper);
+  background-image: radial-gradient(rgba(28, 25, 23, 0.05) 0.6px, transparent 0.6px);
+  background-size: 6px 6px;
   border: 2px solid var(--charcoal);
   box-shadow: 6px 6px 0 var(--charcoal);
 }
@@ -479,18 +485,6 @@ button.danger {
   box-shadow: inset 0 0 0 3px var(--terracotta);
 }
 
-.metro-state-change .metro-tile {
-  animation: tile-arrive 260ms ease-out both;
-}
-
-.metro-state-change .metro-tile:nth-child(3n) {
-  animation-delay: 35ms;
-}
-
-.metro-state-change .metro-tile:nth-child(4n) {
-  animation-delay: 70ms;
-}
-
 .metro-tile-color {
   display: block;
   width: 100%;
@@ -545,13 +539,25 @@ button.danger {
 }
 
 .metro-token {
-  width: 12px;
-  height: 12px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 22px;
+  margin: 2px auto 0;
+  padding: 0;
   margin-top: auto;
-  border: 2px solid var(--cream);
+  border: 3px solid var(--cream);
   border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--charcoal);
-  animation: token-pop 260ms ease-out both;
+  box-shadow: 0 2px 0 var(--charcoal), 0 0 0 1px var(--charcoal);
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  z-index: 3;
 }
 
 .metro-sidebar {
@@ -562,9 +568,14 @@ button.danger {
 
 .metro-turn-panel,
 .metro-action-panel,
-.metro-event-panel {
+.metro-event-panel,
+.metro-trade-panel,
+.metro-auction-panel,
+.metro-card-shelf {
   padding: 16px;
   background: var(--cream);
+  background-image: radial-gradient(rgba(28, 25, 23, 0.04) 0.6px, transparent 0.6px);
+  background-size: 6px 6px;
   border: 2px solid var(--charcoal);
   box-shadow: 4px 4px 0 var(--charcoal);
 }
@@ -735,6 +746,218 @@ button.danger {
   grid-column: span 2;
 }
 
+.metro-card-shelf {
+  margin-top: 18px;
+  padding: 14px;
+  background: var(--paper);
+  border: 2px solid var(--charcoal);
+  box-shadow: 4px 4px 0 var(--charcoal);
+}
+
+.metro-card-shelf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.metro-card-shelf-header > span:last-child {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--warm-grey);
+}
+
+.metro-property-cards {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding: 4px 4px 8px;
+}
+
+.metro-property-card {
+  width: 195px;
+  min-width: 195px;
+  background: var(--cream);
+  border: 2px solid var(--charcoal);
+  box-shadow: 4px 4px 0 var(--charcoal);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.metro-property-card:hover,
+.metro-property-card:focus-visible,
+.metro-property-card.is-detail {
+  transform: translateY(-4px);
+  box-shadow: 4px 8px 0 var(--charcoal);
+  outline: 3px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+.property-card-strip {
+  height: 14px;
+}
+
+.property-card-header {
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.metro-property-card h3 {
+  padding: 12px 12px 4px;
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.property-card-district {
+  padding: 0 12px 8px;
+  color: var(--warm-grey);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.property-card-prices {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.property-card-price-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px dotted var(--border-color);
+  font-size: 11px;
+}
+
+.property-card-price-row:last-child {
+  border-bottom: 0;
+}
+
+.property-card-price-row strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.property-card-footer {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-color);
+  background: #F5EDCF;
+  color: var(--warm-grey);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-align: center;
+}
+
+.metro-card-empty {
+  padding: 14px 4px;
+  color: var(--warm-grey);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+
+.metro-dice {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.metro-die {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--charcoal);
+  border-radius: 8px;
+  background: var(--cream);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.metro-dice.is-rolling .metro-die {
+  animation: dice-tumble 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.metro-card-draw {
+  width: min(100%, 230px);
+  margin-top: 14px;
+  padding: 12px;
+  border: 2px solid var(--charcoal);
+  background: var(--terracotta);
+  color: var(--cream);
+  box-shadow: 4px 4px 0 var(--charcoal);
+  text-align: center;
+}
+
+.metro-card-draw[hidden],
+.metro-event-toast[hidden] {
+  display: none;
+}
+
+.metro-card-draw.is-revealing {
+  animation: card-flip 520ms ease-out;
+}
+
+.metro-card-draw-deck {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.metro-card-draw strong {
+  display: block;
+  margin: 7px 0 4px;
+  color: var(--mustard);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+}
+
+.metro-card-draw > span:last-child {
+  display: block;
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.metro-event-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 20;
+  max-width: min(440px, calc(100vw - 28px));
+  padding: 10px 14px;
+  transform: translate(-50%, 16px);
+  border: 2px solid var(--charcoal);
+  background: var(--teal);
+  color: var(--cream);
+  box-shadow: 4px 4px 0 var(--charcoal);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.metro-event-toast.is-visible {
+  animation: toast-in 180ms ease-out forwards;
+}
+
 body.colorblind-mode .metro-tile-color {
   filter: grayscale(1) contrast(1.5);
   background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(28, 25, 23, 0.65) 3px 5px);
@@ -746,14 +969,19 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   border-width: 2px;
 }
 
-@keyframes tile-arrive {
-  from { opacity: 0.3; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes dice-tumble {
+  0% { transform: rotate(0) translateY(0); }
+  45% { transform: rotate(16deg) translateY(-12px); }
+  100% { transform: rotate(0) translateY(0); }
 }
 
-@keyframes token-pop {
-  from { opacity: 0; transform: scale(0.45); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes card-flip {
+  0% { opacity: 0; transform: rotateY(90deg) scale(0.92); }
+  100% { opacity: 1; transform: rotateY(0) scale(1); }
+}
+
+@keyframes toast-in {
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @keyframes turn-pulse {
@@ -849,6 +1077,22 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   .metro-center {
     gap: 5px;
     padding: 10px;
+  }
+
+  .metro-card-shelf {
+    margin-top: 12px;
+    padding: 10px;
+  }
+
+  .metro-property-card {
+    width: 170px;
+    min-width: 170px;
+  }
+
+  .metro-die {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
   }
 
   .metro-center strong {

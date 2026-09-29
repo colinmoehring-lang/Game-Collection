@@ -30,3 +30,6 @@
 - Sound is optional and must fail silently when browser audio is blocked; user mute and volume preferences are persisted locally.
 - State feedback uses short, meaningful animations only; every animation must have a `prefers-reduced-motion: reduce` fallback.
 - Interactive controls require visible `:focus-visible` styles, semantic labels/live regions and a non-color-only fallback through text, borders or patterns.
+- Selecting a MetroVille field updates selection and card detail in place; it must not rebuild or animate the complete board.
+- Property cards follow Moodboard C: paper body, 14px district strip, dark mono header, Syne title and compact dotted price rows.
+- Chance and community cards are separate seeded decks; card draws expose deck, title, text and effect through state/log data for the UI.

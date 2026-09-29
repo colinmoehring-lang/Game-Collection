@@ -1,11 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import { MetrovilleModule, calculateRent } from './index.js';
 import { METROVILLE_FIELDS, DISTRICT_MAP } from './board.js';
-import type { Player } from '@metroville/game-sdk';
+import { EXPRESS_CARDS, STADTRAT_CARDS } from './cards.js';
+import { createRNG, type Player } from '@metroville/game-sdk';
 
 const p1: Player = { id: 'p1', name: 'Alice', color: '#C84B2F' };
 const p2: Player = { id: 'p2', name: 'Bob', color: '#1D7A72' };
 const p3: Player = { id: 'p3', name: 'Charlie', color: '#D4930A' };
+
+function seedForDiceTotal(total: number) {
+  for (let index = 0; index < 10000; index++) {
+    const seed = `card-roll-${index}`;
+    const rng = createRNG(`${seed}:0`);
+    const first = Math.floor(rng() * 6) + 1;
+    const second = Math.floor(rng() * 6) + 1;
+    if (first + second === total) return seed;
+  }
+  throw new Error(`No seed found for dice total ${total}`);
+}
 
 describe('MetroVille Rule Engine', () => {
   it('initializes standard board with 40 fields correctly', () => {
@@ -210,6 +222,29 @@ describe('MetroVille Rule Engine', () => {
     expect(state.properties[1].ownerId).toBeNull();
     expect(state.winnerId).toBe('p2');
     expect(state.phase).toBe('gameover');
+  });
+
+  it('initializes and applies Chance and Gemeinschaft cards', () => {
+    const state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-cards');
+    expect(state.chanceDeck).toHaveLength(EXPRESS_CARDS.length);
+    expect(state.communityDeck).toHaveLength(STADTRAT_CARDS.length);
+
+    const chanceState = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], seedForDiceTotal(2));
+    chanceState.players[0].position = 5;
+    const afterChance = MetrovilleModule.applyAction(chanceState, { type: 'ROLL_DICE' });
+    expect(afterChance.lastDrawnCard?.deck).toBe('chance');
+
+    const communityState = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], seedForDiceTotal(2));
+    communityState.players[0].position = 0;
+    const afterCommunity = MetrovilleModule.applyAction(communityState, { type: 'ROLL_DICE' });
+    expect(afterCommunity.lastDrawnCard?.deck).toBe('community');
+
+    const cardState = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-card-effect');
+    const technologyCard = EXPRESS_CARDS.find(card => card.id === 'exp-4');
+    const communityCard = STADTRAT_CARDS.find(card => card.id === 'stadt-1');
+    technologyCard?.action(cardState, 'p1');
+    communityCard?.action(cardState, 'p1');
+    expect(cardState.players[0].money).toBe(1750);
   });
 
   it('simulates 100 bot games per preset without crashing', async () => {

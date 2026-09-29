@@ -3,7 +3,7 @@ import type { CardDefinition, MetrovilleState } from './types.js';
 export const EXPRESS_CARDS: CardDefinition[] = [
   {
     id: 'exp-1',
-    deck: 'express',
+    deck: 'chance',
     title: 'Eilzustellung zum Stadttor',
     text: 'Rücke vor bis zum Stadttor und kassiere 200 Metro-Taler.',
     action: (state, pid) => {
@@ -16,7 +16,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
   },
   {
     id: 'exp-2',
-    deck: 'express',
+    deck: 'chance',
     title: 'Direktflug zum Raumhafen-Boulevard',
     text: 'Rücke vor zum Raumhafen-Boulevard. Wenn du über das Stadttor kommst, ziehe 200 Taler ein.',
     action: (state, pid) => {
@@ -29,7 +29,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
   },
   {
     id: 'exp-3',
-    deck: 'express',
+    deck: 'chance',
     title: 'Quarantäne-Sofortbefehl',
     text: 'Begib dich direkt in die Sicherheitszone. Gehe nicht über das Stadttor.',
     action: (state, pid) => {
@@ -43,7 +43,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
   },
   {
     id: 'exp-4',
-    deck: 'express',
+    deck: 'chance',
     title: 'Technologie-Prämie',
     text: 'Die Ingenieursgilde belohnt deine Innovation: Erhalte 150 Metro-Taler.',
     action: (state, pid) => {
@@ -53,7 +53,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
   },
   {
     id: 'exp-5',
-    deck: 'express',
+    deck: 'chance',
     title: 'Magnetschwebebahn-Pass',
     text: 'Kostenlose Sonderfreigabe zur Entlassung aus der Sicherheitszone.',
     action: (state, pid) => {
@@ -63,7 +63,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
   },
   {
     id: 'exp-6',
-    deck: 'express',
+    deck: 'chance',
     title: 'Gebäudesanierungs-Abgabe',
     text: 'Zahle 25 Taler je Wohnblock und 100 Taler je Wolkenkratzer für Filteranlagen.',
     action: (state, pid) => {
@@ -84,7 +84,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
 export const STADTRAT_CARDS: CardDefinition[] = [
   {
     id: 'stadt-1',
-    deck: 'stadtrat',
+    deck: 'community',
     title: 'Kommunal-Dividende',
     text: 'Der Stadtrat schüttet Gewinne aus städtischen Betrieben aus. Erhalte 100 Taler.',
     action: (state, pid) => {
@@ -94,7 +94,7 @@ export const STADTRAT_CARDS: CardDefinition[] = [
   },
   {
     id: 'stadt-2',
-    deck: 'stadtrat',
+    deck: 'community',
     title: 'Umwelt-Stadtratsabgabe',
     text: 'Beitrag zur Luftreinhaltung der Kuppel. Zahle 50 Taler.',
     action: (state, pid) => {
@@ -104,7 +104,7 @@ export const STADTRAT_CARDS: CardDefinition[] = [
   },
   {
     id: 'stadt-3',
-    deck: 'stadtrat',
+    deck: 'community',
     title: 'Stadtrats-Ehrenbürgerschaft',
     text: 'Jeder Mitspieler gratuliert mit 20 Metro-Talern.',
     action: (state, pid) => {
@@ -121,7 +121,7 @@ export const STADTRAT_CARDS: CardDefinition[] = [
   },
   {
     id: 'stadt-4',
-    deck: 'stadtrat',
+    deck: 'community',
     title: 'Kostenlose Sonderfreigabe',
     text: 'Du kommst ohne Gebühr aus der Sicherheitszone frei.',
     action: (state, pid) => {

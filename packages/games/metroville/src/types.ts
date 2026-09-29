@@ -41,6 +41,8 @@ export interface PropertyState {
   isMortgaged: boolean;
 }
 
+export type CardDeck = 'chance' | 'community';
+
 export type MetrovillePreset = 'blitz' | 'standard' | 'classic_light';
 
 export interface MetrovilleConfig {
@@ -52,7 +54,7 @@ export interface MetrovilleConfig {
 
 export interface CardDefinition {
   id: string;
-  deck: 'express' | 'stadtrat';
+  deck: CardDeck;
   title: string;
   text: string;
   action: (state: MetrovilleState, playerId: string) => void;
@@ -91,9 +93,9 @@ export interface MetrovilleState {
   hasRolled: boolean;
   phase: 'roll' | 'tile_action' | 'turn_end' | 'auction' | 'gameover';
   properties: Record<number, PropertyState>;
-  expressDeck: string[]; // Card IDs
-  stadtratDeck: string[];
-  lastDrawnCard: { deck: 'express' | 'stadtrat'; title: string; text: string } | null;
+  chanceDeck: string[]; // Card IDs
+  communityDeck: string[];
+  lastDrawnCard: { deck: CardDeck; title: string; text: string } | null;
   auction: AuctionState | null;
   pendingTrade: TradeOffer | null;
   winnerId: string | null;

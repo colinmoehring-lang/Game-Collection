@@ -199,8 +199,8 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       }
     });
 
-    const expressDeck = shuffleArray(EXPRESS_CARDS.map(c => c.id), rng);
-    const stadtratDeck = shuffleArray(STADTRAT_CARDS.map(c => c.id), rng);
+    const chanceDeck = shuffleArray(EXPRESS_CARDS.map(c => c.id), rng);
+    const communityDeck = shuffleArray(STADTRAT_CARDS.map(c => c.id), rng);
 
     const state: MetrovilleState = {
       config: {
@@ -221,8 +221,8 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       hasRolled: false,
       phase: 'roll',
       properties,
-      expressDeck,
-      stadtratDeck,
+      chanceDeck,
+      communityDeck,
       lastDrawnCard: null,
       auction: null,
       pendingTrade: null,
@@ -767,7 +767,11 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
   }
 
   const field = METROVILLE_FIELDS[player.position];
-  state.log.push(`📍 ${player.name} landet auf [${field.index}] ${field.name}.`);
+  if (field.type === 'station') {
+    state.log.push(`${player.name} zieht in ${field.name} ein.`);
+  } else {
+    state.log.push(`${player.name} landet auf [${field.index}] ${field.name}.`);
+  }
 
   // Quarantäne-Befehl (Go to jail)
   if (player.position === 30) {
@@ -789,17 +793,17 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
   }
 
   // Cards
-  if (field.type === 'card') {
-    const isExpress = field.name === 'Expresskurier';
-    const deck = isExpress ? state.expressDeck : state.stadtratDeck;
+    if (field.type === 'card') {
+    const isChance = field.name === 'Chance' || field.name === 'Expresskurier';
+    const deck = isChance ? state.chanceDeck : state.communityDeck;
     if (deck.length === 0) {
-      deck.push(...(isExpress ? EXPRESS_CARDS : STADTRAT_CARDS).map(c => c.id));
+      deck.push(...(isChance ? EXPRESS_CARDS : STADTRAT_CARDS).map(c => c.id));
     }
     const cardId = deck.shift()!;
     const card = ALL_CARDS_MAP[cardId];
     if (card) {
       state.lastDrawnCard = { deck: card.deck, title: card.title, text: card.text };
-      state.log.push(`🎴 ${isExpress ? 'Expresskurier' : 'Stadtrat-Beschluss'}: "${card.title}" - ${card.text}`);
+      state.log.push(`🎴 ${isChance ? 'Chance' : 'Gemeinschaft'}: "${card.title}" - ${card.text}`);
       card.action(state, player.id);
       checkBankruptcy(state, player);
     }

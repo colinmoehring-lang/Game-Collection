@@ -12,7 +12,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
     index: 1, name: 'Alte Allee', type: 'property', district: 'altstadt', color: '#1D7A72',
     cost: 60, baseRent: 2, rents: [2, 10, 30, 90, 160, 250], houseCost: 50
   },
-  { index: 2, name: 'Stadtrat-Beschluss', type: 'card' },
+  { index: 2, name: 'Gemeinschaft', type: 'card' },
   {
     index: 3, name: 'Lindenweg', type: 'property', district: 'altstadt', color: '#1D7A72',
     cost: 60, baseRent: 4, rents: [4, 20, 60, 180, 320, 450], houseCost: 50
@@ -27,7 +27,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
     index: 6, name: 'Hauptplatz', type: 'property', district: 'zentrum', color: '#D4930A',
     cost: 100, baseRent: 6, rents: [6, 30, 90, 270, 400, 550], houseCost: 50
   },
-  { index: 7, name: 'Expresskurier', type: 'card' },
+  { index: 7, name: 'Chance', type: 'card' },
   {
     index: 8, name: 'Ratsherrenstraße', type: 'property', district: 'zentrum', color: '#D4930A',
     cost: 100, baseRent: 6, rents: [6, 30, 90, 270, 400, 550], houseCost: 50
@@ -63,7 +63,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
     index: 16, name: 'Turmstraße', type: 'property', district: 'hafenviertel', color: '#3B7FC4',
     cost: 180, baseRent: 14, rents: [14, 70, 200, 550, 750, 950], houseCost: 100
   },
-  { index: 17, name: 'Stadtrat-Beschluss', type: 'card' },
+  { index: 17, name: 'Gemeinschaft', type: 'card' },
   {
     index: 18, name: 'Dockallee', type: 'property', district: 'hafenviertel', color: '#3B7FC4',
     cost: 180, baseRent: 14, rents: [14, 70, 200, 550, 750, 950], houseCost: 100
@@ -81,7 +81,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
     index: 21, name: 'Eispalast', type: 'property', district: 'polardistrikt', color: '#D97706',
     cost: 220, baseRent: 18, rents: [18, 90, 250, 700, 875, 1050], houseCost: 150
   },
-  { index: 22, name: 'Expresskurier', type: 'card' },
+  { index: 22, name: 'Chance', type: 'card' },
   {
     index: 23, name: 'Polarboulevard', type: 'property', district: 'polardistrikt', color: '#D97706',
     cost: 220, baseRent: 18, rents: [18, 90, 250, 700, 875, 1050], houseCost: 150
@@ -121,7 +121,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
     index: 32, name: 'Hafenblick', type: 'property', district: 'hafenviertel', color: '#3B7FC4',
     cost: 300, baseRent: 26, rents: [26, 130, 390, 900, 1100, 1275], houseCost: 200
   },
-  { index: 33, name: 'Stadtrat-Beschluss', type: 'card' },
+  { index: 33, name: 'Gemeinschaft', type: 'card' },
   {
     index: 34, name: 'Ankerkai', type: 'property', district: 'hafenviertel', color: '#3B7FC4',
     cost: 320, baseRent: 28, rents: [28, 150, 450, 1000, 1200, 1400], houseCost: 200
@@ -130,7 +130,7 @@ export const METROVILLE_FIELDS: FieldDefinition[] = [
   // Station 4
   { index: 35, name: 'Bahnhof Ost', type: 'station', cost: 200, baseRent: 25 },
 
-  { index: 36, name: 'Expresskurier', type: 'card' },
+  { index: 36, name: 'Chance', type: 'card' },
   {
     index: 37, name: 'Raumhafen-Boulevard', type: 'property', district: 'weltraumring', color: '#8B5CF6',
     cost: 350, baseRent: 35, rents: [35, 175, 500, 1100, 1300, 1500], houseCost: 200

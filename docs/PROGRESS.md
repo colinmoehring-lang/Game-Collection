@@ -36,4 +36,10 @@
   - [x] Ereignisklänge für Würfel, Kauf/Auktion, Handel und Sieg
   - [x] Zustands-, Token- und Zuganimationen mit `prefers-reduced-motion`-Fallback
   - [x] Tastaturfokus, Live-Status, ARIA-Beschriftungen und persistente Farbseh-Hilfe
+- [x] **Zwischenetappe vor Etappe 9: Korrekturen und Ergänzungen**
+  - [x] Board-Auswahl ohne Reload-Animation oder vollständigen DOM-Rebuild
+  - [x] Kontrastreiche Spielfiguren, Grundstückskartenregal und Detailkarten per Feldklick
+  - [x] Explizite Chance-/Gemeinschaftsstapel mit deterministischem Ziehen und Karteneffekten
+  - [x] Würfel-, Kartenzieh- und kompakte, automatisch verschwindende Ereignisanimationen
+  - [x] Moodboard-C-Papiermaterialität, Kartentypografie und Farbstreifen nachgeschärft
 - [ ] **Etappe 9: Tests, README, Abschluss**
