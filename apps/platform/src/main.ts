@@ -7,9 +7,11 @@ import { audio } from './audio.js';
 const BACKEND_URL = window.location.hostname === 'localhost'
   ? 'ws://localhost:2567'
   : `ws://${window.location.hostname}:2567`;
+const BACKEND_HTTP_URL = BACKEND_URL.replace(/^ws:/, 'http:');
 
 const client = new Client(BACKEND_URL);
 let currentRoom: Room<any> | null = null;
+let lanShareAddress: string | null = null;
 let currentSessionToken = sessionStorage.getItem('metroville_session_token') || ('tok-' + Math.random().toString(36).substring(2, 9));
 sessionStorage.setItem('metroville_session_token', currentSessionToken);
 
@@ -176,7 +178,31 @@ function syncColorMode() {
   colorModeToggle.setAttribute('aria-label', enabled ? 'Farbseh-Hilfe ausschalten' : 'Farbseh-Hilfe einschalten');
 }
 
+function getRoomShareUrl(roomCode: string): string {
+  const url = new URL(window.location.href);
+  if (lanShareAddress && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
+    url.hostname = lanShareAddress;
+  }
+  url.searchParams.set('room', roomCode);
+  return url.toString();
+}
+
+async function resolveLanShareAddress() {
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
+  try {
+    const response = await fetch(`${BACKEND_HTTP_URL}/network-address`);
+    if (!response.ok) return;
+    const result = await response.json() as { address?: string | null };
+    if (!result.address) return;
+    lanShareAddress = result.address;
+    if (currentRoom?.state.status === 'lobby') renderLobby(currentRoom.state);
+  } catch {
+    lanShareAddress = null;
+  }
+}
+
 syncAudioControls();
+void resolveLanShareAddress();
 if (localStorage.getItem('metroville_color_mode') === 'on') document.body.classList.add('colorblind-mode');
 syncColorMode();
 
@@ -328,7 +354,7 @@ function renderLobby(state: any) {
   lobbyRoomCode.textContent = code;
 
   // Share URL & QR Code
-  const shareUrl = `${window.location.origin}${window.location.pathname}?room=${code}`;
+  const shareUrl = getRoomShareUrl(code);
   shareLinkInput.value = shareUrl;
   QRCode.toCanvas(qrcodeCanvas, shareUrl, { width: 90, margin: 1 });
 
