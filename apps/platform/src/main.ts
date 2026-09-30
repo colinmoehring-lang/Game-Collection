@@ -3,6 +3,13 @@ import QRCode from 'qrcode';
 import { generateRoomCode } from '@metroville/game-sdk';
 import { METROVILLE_FIELDS, MetrovilleModule } from '@metroville/game-metroville';
 import { audio } from './audio.js';
+import { METRO_CARD_BOT_OVERLAY_MS, METRO_EVENT_TOAST_MS, METRO_EVENT_TOAST_QUEUE_MAX } from './metroConstants.js';
+import {
+  createMetroPresentationState,
+  getDisplayPosition,
+  syncMetroPresentation,
+  type MetroPresentationState
+} from './metroPresentation.js';
 
 // VITE_BACKEND_URL kommt aus der Deploy-Umgebung (siehe render.yaml).
 // Lokal wird der Colyseus-Server auf demselben Host wie die Seite erwartet.
@@ -47,7 +54,11 @@ const btnAddBot = document.getElementById('btn-add-bot')!;
 const btnStartGame = document.getElementById('btn-start-game')!;
 const btnLeaveRoom = document.getElementById('btn-leave-room')!;
 const metrovillePresetSection = document.getElementById('metroville-preset-section')!;
-const metrovillePresetSelect = document.getElementById('metroville-preset-select') as HTMLSelectElement;
+const metrovillePresetValue = document.getElementById('metroville-preset-value') as HTMLInputElement;
+const metrovillePresetPicker = document.getElementById('metroville-preset-picker')!;
+const metrovillePresetTrigger = document.getElementById('metroville-preset-trigger')!;
+const metrovillePresetDisplay = document.getElementById('metroville-preset-display')!;
+const metrovillePresetOptions = document.getElementById('metroville-preset-options')!;
 const metrovillePresetDescription = document.getElementById('metroville-preset-description')!;
 
 const gameStatusBar = document.getElementById('game-status-bar')!;
@@ -90,10 +101,11 @@ const metroCenterDetail = document.getElementById('metro-center-detail')!;
 const metroDice = document.getElementById('metro-dice')!;
 const metroDieOne = document.getElementById('metro-die-one')!;
 const metroDieTwo = document.getElementById('metro-die-two')!;
-const metroCardDraw = document.getElementById('metro-card-draw')!;
-const metroCardDrawDeck = document.getElementById('metro-card-draw-deck')!;
-const metroCardDrawTitle = document.getElementById('metro-card-draw-title')!;
-const metroCardDrawText = document.getElementById('metro-card-draw-text')!;
+const metroCardOverlay = document.getElementById('metro-card-overlay')!;
+const metroCardOverlayClose = document.getElementById('metro-card-overlay-close')!;
+const metroCardOverlayDeck = document.getElementById('metro-card-overlay-deck')!;
+const metroCardOverlayTitle = document.getElementById('metro-card-overlay-title')!;
+const metroCardOverlayText = document.getElementById('metro-card-overlay-text')!;
 const metroPropertyCards = document.getElementById('metro-property-cards')!;
 const metroCardShelfCount = document.getElementById('metro-card-shelf-count')!;
 const metroPropertyOverlay = document.getElementById('metro-property-overlay')!;
@@ -140,14 +152,61 @@ let eventToastTimer: number | undefined;
 let cardDrawTimer: number | undefined;
 let lastCardKey = '';
 let lastMetroEventKey = '';
+let metroPresentation: MetroPresentationState = createMetroPresentationState();
+let metroPresentationRuntime: any = null;
+let metroRenderQueue: Promise<void> = Promise.resolve();
+let metroPresetOptionButtons: HTMLButtonElement[] = [];
 
 const metrovillePresets = MetrovilleModule.manifest.variants || [];
-metrovillePresetSelect.replaceChildren(...metrovillePresets.map((preset) => {
-  const option = document.createElement('option');
-  option.value = preset.id;
+
+function closeMetroPresetMenu(restoreFocus = false) {
+  metrovillePresetOptions.hidden = true;
+  metrovillePresetTrigger.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) metrovillePresetTrigger.focus();
+}
+
+function selectMetroPreset(presetId: string, notifyServer = false) {
+  const preset = metrovillePresets.find((entry) => entry.id === presetId) || metrovillePresets[0];
+  if (!preset) return;
+  metrovillePresetValue.value = preset.id;
+  metrovillePresetDisplay.textContent = preset.name;
+  metrovillePresetDescription.textContent = preset.description;
+  metroPresetOptionButtons.forEach((button) => {
+    const selected = button.dataset.presetId === preset.id;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-selected', String(selected));
+  });
+  closeMetroPresetMenu(true);
+  if (notifyServer) currentRoom?.send('SET_GAME_PRESET', { preset: preset.id });
+}
+
+metrovillePresetOptions.replaceChildren(...metrovillePresets.map((preset) => {
+  const option = document.createElement('button');
+  option.type = 'button';
+  option.className = 'game-mode-option';
+  option.role = 'option';
+  option.dataset.presetId = preset.id;
   option.textContent = preset.name;
+  option.addEventListener('click', () => selectMetroPreset(preset.id, true));
   return option;
 }));
+metroPresetOptionButtons = [...metrovillePresetOptions.querySelectorAll<HTMLButtonElement>('[role="option"]')];
+selectMetroPreset(metrovillePresets[0]?.id || 'standard');
+
+metrovillePresetTrigger.addEventListener('click', () => {
+  if (metrovillePresetTrigger.hasAttribute('disabled')) return;
+  if (metrovillePresetOptions.hidden) {
+    metrovillePresetOptions.hidden = false;
+    metrovillePresetTrigger.setAttribute('aria-expanded', 'true');
+    metroPresetOptionButtons.find((button) => button.classList.contains('is-selected'))?.focus();
+  } else {
+    closeMetroPresetMenu();
+  }
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (!metrovillePresetPicker.contains(event.target as Node)) closeMetroPresetMenu();
+});
 
 // Restore player name
 playerNameInput.value = localStorage.getItem('metroville_player_name') || `Spieler-${Math.floor(100 + Math.random() * 900)}`;
@@ -343,6 +402,8 @@ function setupRoomListeners(room: Room<any>) {
     connIndicator.style.color = 'var(--warm-grey)';
     currentRoom = null;
     previousMetroRuntimeState = null;
+    metroPresentation = createMetroPresentationState();
+    metroPresentationRuntime = null;
     latestPrivatePokerView = null;
     previousTicTacToeMoveCount = 0;
     lastCardKey = '';
@@ -435,11 +496,10 @@ function renderLobby(state: any) {
   metrovillePresetSection.toggleAttribute('hidden', !isMetroville);
   if (isMetroville) {
     const selectedPreset = metrovillePresets.find((preset) => preset.id === state.gamePreset) || metrovillePresets[0];
-    if (selectedPreset) {
-      metrovillePresetSelect.value = selectedPreset.id;
-      metrovillePresetDescription.textContent = selectedPreset.description;
-    }
-    metrovillePresetSelect.disabled = !meIsHost;
+    if (selectedPreset) selectMetroPreset(selectedPreset.id);
+    metrovillePresetTrigger.toggleAttribute('disabled', !meIsHost);
+    metrovillePresetTrigger.style.pointerEvents = meIsHost ? '' : 'none';
+    metrovillePresetTrigger.style.opacity = meIsHost ? '1' : '0.65';
   }
 
   if (meIsHost) {
@@ -473,7 +533,7 @@ function renderGame(state: any) {
 
   texasHoldemGame.hidden = true;
   if (state.gameId === 'metroville') {
-    renderMetroville(state, runtimeState);
+    queueMetrovilleRender(state, runtimeState);
     return;
   }
 
@@ -522,7 +582,84 @@ function renderGame(state: any) {
   });
 }
 
+function renderDiePips(container: HTMLElement, value: number) {
+  const pip = container.querySelector('.metro-die-pips') as HTMLElement | null;
+  if (!pip) return;
+  pip.dataset.value = String(value);
+  pip.replaceChildren();
+  const positions: Record<number, number[][]> = {
+    1: [[2, 2]],
+    2: [[1, 1], [3, 3]],
+    3: [[1, 1], [2, 2], [3, 3]],
+    4: [[1, 1], [1, 3], [3, 1], [3, 3]],
+    5: [[1, 1], [1, 3], [2, 2], [3, 1], [3, 3]],
+    6: [[1, 1], [1, 2], [1, 3], [3, 1], [3, 2], [3, 3]]
+  };
+  (positions[value] || positions[1]).forEach(([row, col]) => {
+    const dot = document.createElement('span');
+    dot.className = 'metro-die-dot';
+    dot.style.gridRow = String(row);
+    dot.style.gridColumn = String(col);
+    pip.appendChild(dot);
+  });
+}
+
+function queueMetrovilleRender(roomState: any, runtimeState: any) {
+  metroRenderQueue = metroRenderQueue.then(async () => {
+    const previous = metroPresentationRuntime;
+    await syncMetroPresentation(metroPresentation, previous, runtimeState, () => {
+      renderMetroDice();
+      if (latestMetroRoomState && latestMetroRuntimeState) {
+        paintMetroBoardTokens(latestMetroRoomState, latestMetroRuntimeState);
+      }
+    });
+    metroPresentationRuntime = runtimeState;
+    renderMetroville(roomState, runtimeState);
+  }).catch(() => {
+    metroPresentationRuntime = runtimeState;
+    renderMetroville(roomState, runtimeState);
+  });
+}
+
+function renderMetroDice() {
+  renderDiePips(metroDieOne, metroPresentation.diceDisplay[0]);
+  renderDiePips(metroDieTwo, metroPresentation.diceDisplay[1]);
+  metroDice.classList.toggle('is-rolling', metroPresentation.diceRolling);
+}
+
+function paintMetroBoardTokens(roomState: any, runtimeState: any) {
+  metroBoard.querySelectorAll<HTMLElement>('.metro-tile').forEach((tile) => {
+    const fieldIndex = Number(tile.dataset.field);
+    const fieldPlayers = runtimeState.players.filter((player: any) =>
+      !player.bankrupt && getDisplayPosition(metroPresentation, player.id, player.position) === fieldIndex
+    );
+    tile.classList.toggle('has-players', fieldPlayers.length > 0);
+    let tokenStack = tile.querySelector('.metro-token-stack');
+    if (fieldPlayers.length === 0) {
+      tokenStack?.remove();
+      return;
+    }
+    if (!tokenStack) {
+      tokenStack = document.createElement('span');
+      tokenStack.className = 'metro-token-stack';
+      tokenStack.setAttribute('role', 'img');
+      tile.appendChild(tokenStack);
+    }
+    tokenStack.replaceChildren();
+    tokenStack.title = fieldPlayers.map((player: any) => player.name).join(', ');
+    tokenStack.setAttribute('aria-label', `${fieldPlayers.length} Spieler auf Feld ${fieldIndex}`);
+    fieldPlayers.forEach((player: any) => {
+      const token = document.createElement('span');
+      token.className = `metro-token${metroPresentation.hopTokenId === player.id ? ' is-hopping' : ''}`;
+      token.style.backgroundColor = player.color || 'var(--terracotta)';
+      token.setAttribute('aria-hidden', 'true');
+      tokenStack!.appendChild(token);
+    });
+  });
+}
+
 function describeMetroDecision(runtimeState: any, player: any): string {
+  if (runtimeState.phase === 'card_reveal') return 'liest eine Karte';
   if (runtimeState.phase === 'roll') {
     return player?.inJail ? 'würfelt, um die Sicherheitszone zu verlassen' : 'würfelt';
   }
@@ -585,8 +722,10 @@ function renderMetroville(roomState: any, runtimeState: any) {
   metroCenterDetail.textContent = runtimeState.phase === 'gameover'
     ? runtimeState.winReason || 'Spiel beendet'
     : `Runde ${runtimeState.turnCount + 1}`;
-  metroDieOne.textContent = String(runtimeState.dice[0]);
-  metroDieTwo.textContent = String(runtimeState.dice[1]);
+  renderMetroDice();
+  const diceCaptionText = lastRoller
+    ? `Wurf von ${lastRoller.name}: ${runtimeState.dice[0]} + ${runtimeState.dice[1]}`
+    : 'Noch kein Wurf';
 
   metroBoard.innerHTML = '';
   const center = document.createElement('div');
@@ -598,13 +737,18 @@ function renderMetroville(roomState: any, runtimeState: any) {
   centerDetail.textContent = metroCenterDetail.textContent;
   const diceCaption = document.createElement('span');
   diceCaption.className = 'metro-dice-caption';
-  diceCaption.textContent = lastRoller
-    ? `Wurf von ${lastRoller.name}: ${runtimeState.dice[0]} + ${runtimeState.dice[1]}`
-    : 'Noch kein Wurf';
+  diceCaption.textContent = diceCaptionText;
   diceCaption.setAttribute('aria-label', lastRoller
     ? `Würfelwurf von ${lastRoller.name}: ${runtimeState.dice[0]} und ${runtimeState.dice[1]}`
     : 'Noch kein Würfelwurf');
-  center.append(centerTitle, diceCaption, centerDetail);
+  const deckStacks = document.createElement('div');
+  deckStacks.className = 'metro-deck-stacks';
+  deckStacks.setAttribute('aria-hidden', 'true');
+  deckStacks.innerHTML = `
+    <div class="metro-deck metro-deck-chance" id="metro-deck-chance-live"><span class="metro-deck-label">Chance</span></div>
+    <div class="metro-deck metro-deck-community" id="metro-deck-community-live"><span class="metro-deck-label">Gemein-   schaft</span></div>
+  `;
+  center.append(centerTitle, diceCaption, centerDetail, deckStacks);
   metroBoard.appendChild(center);
 
   METROVILLE_FIELDS.forEach((field) => {
@@ -644,7 +788,9 @@ function renderMetroville(roomState: any, runtimeState: any) {
       tile.style.setProperty('--owner-color', owner?.color || 'var(--charcoal)');
     }
     const fieldPlayers = runtimeState.players
-      .filter((player: any) => player.position === field.index && !player.bankrupt);
+      .filter((player: any) =>
+        !player.bankrupt && getDisplayPosition(metroPresentation, player.id, player.position) === field.index
+      );
     if (fieldPlayers.length > 0) {
       tile.classList.add('has-players');
       const tokenStack = document.createElement('span');
@@ -654,7 +800,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
       tokenStack.setAttribute('aria-label', `${fieldPlayers.length} Spieler auf ${field.name}: ${fieldPlayers.map((player: any) => player.name).join(', ')}`);
       fieldPlayers.forEach((player: any) => {
         const token = document.createElement('span');
-        token.className = 'metro-token';
+        token.className = `metro-token${metroPresentation.hopTokenId === player.id ? ' is-hopping' : ''}`;
         token.style.backgroundColor = player.color || 'var(--terracotta)';
         token.setAttribute('aria-hidden', 'true');
         tokenStack.appendChild(token);
@@ -662,13 +808,14 @@ function renderMetroville(roomState: any, runtimeState: any) {
       tile.appendChild(tokenStack);
     }
     tile.addEventListener('click', () => {
-        if (property) openPropertyOverlay(field.index);
+      if (property) openPropertyOverlay(field.index);
     });
     metroBoard.appendChild(tile);
   });
 
   renderPropertyCards(runtimeState, mySessionId);
-  renderCardDraw(runtimeState);
+  renderCardOverlay(roomState, runtimeState, mySessionId);
+  updateDeckStacks(runtimeState);
   showLatestMetroEvent(runtimeState);
 
   metroPlayerList.innerHTML = '';
@@ -715,7 +862,8 @@ function renderMetroville(roomState: any, runtimeState: any) {
     metroLog.appendChild(group);
   });
 
-  const canAct = isMyTurn && roomState.status === 'playing';
+  const awaitingCardDismiss = runtimeState.phase === 'card_reveal' && runtimeState.pendingCard;
+  const canAct = isMyTurn && roomState.status === 'playing' && !metroPresentation.movementLocked && !awaitingCardDismiss;
   const selectedProperty = selectedPropertyIndex === null ? null : runtimeState.properties[selectedPropertyIndex];
   const selectedField = selectedPropertyIndex === null ? null : METROVILLE_FIELDS[selectedPropertyIndex];
   const isUnownedBuyableField = Boolean(currentField?.cost && !runtimeState.properties[currentField.index]?.ownerId);
@@ -773,6 +921,9 @@ function describeMetroActionContext(
     const activePlayer = runtimeState.players.find((player: any) => player.id === roomState.currentTurnPlayerId);
     const field = activePlayer ? METROVILLE_FIELDS[activePlayer.position] : null;
     return `Warten auf ${activePlayer?.name || 'den nächsten Spieler'} · ${field?.name || 'Standort unbekannt'} · ${describeMetroDecision(runtimeState, activePlayer)}.`;
+  }
+  if (runtimeState.phase === 'card_reveal') {
+    return 'Lies die Karte und klicke auf Schließen, um fortzufahren.';
   }
   if (runtimeState.phase === 'roll') {
     return currentPlayer?.inJail
@@ -886,7 +1037,7 @@ function renderTexasHoldem(roomState: any, publicState: any) {
     ? isMyTurn ? 'Wähle die Karten, die du tauschen möchtest.' : `Tausch von ${turnPlayer?.name || 'Warten'}`
     : isMyTurn
       ? callAmount > 0 ? `Noch ${callAmount} Chips zum Mitgehen.` : 'Du kannst checken oder erhöhen.'
-    : `Am Zug: ${turnPlayer?.name || 'Warten'}`;
+      : `Am Zug: ${turnPlayer?.name || 'Warten'}`;
   pokerCardsToggle.textContent = pokerCardsHidden ? 'Karten anzeigen' : 'Karten verstecken';
   pokerCardsToggle.setAttribute('aria-pressed', String(pokerCardsHidden));
 
@@ -1089,36 +1240,73 @@ function addPropertyPrice(container: HTMLElement, label: string, value: string) 
   container.appendChild(row);
 }
 
-function renderCardDraw(runtimeState: any) {
-  const card = runtimeState.lastDrawnCard;
+function updateDeckStacks(runtimeState: any) {
+  const card = runtimeState.pendingCard || runtimeState.lastDrawnCard;
+  metroBoard.querySelectorAll('.metro-deck-chance').forEach((deck) => {
+    deck.classList.toggle('is-drawing', card?.deck === 'chance');
+  });
+  metroBoard.querySelectorAll('.metro-deck-community').forEach((deck) => {
+    deck.classList.toggle('is-drawing', card?.deck === 'community');
+  });
+}
+
+function renderCardOverlay(roomState: any, runtimeState: any, mySessionId: string | undefined) {
+  const card = runtimeState.pendingCard;
   if (!card) {
-    metroCardDraw.hidden = true;
+    metroCardOverlay.hidden = true;
+    document.body.classList.remove('overlay-open');
     return;
   }
   const key = `${card.deck}:${card.title}:${card.text}`;
-  metroCardDrawDeck.textContent = card.deck === 'chance' ? 'CHANCE' : 'GEMEINSCHAFT';
-  metroCardDrawTitle.textContent = card.title;
-  metroCardDrawText.textContent = card.text;
+  metroCardOverlayDeck.textContent = card.deck === 'chance' ? 'CHANCE · EXPRESSKURIER' : 'GEMEINSCHAFT · STADTRAT';
+  metroCardOverlayTitle.textContent = card.title;
+  metroCardOverlayText.textContent = card.text;
+  metroCardOverlay.classList.toggle('metro-card-chance', card.deck === 'chance');
+  metroCardOverlay.classList.toggle('metro-card-community', card.deck === 'community');
+  const turnPlayer = roomState.players.get(roomState.currentTurnPlayerId);
+  const isBotTurn = Boolean(turnPlayer?.isBot);
+  const isMyCardTurn = roomState.currentTurnPlayerId === mySessionId;
   if (key !== lastCardKey) {
-    metroCardDraw.hidden = false;
-    metroCardDraw.classList.remove('is-revealing');
-    void metroCardDraw.offsetWidth;
-    metroCardDraw.classList.add('is-revealing');
-    if (cardDrawTimer) window.clearTimeout(cardDrawTimer);
-    cardDrawTimer = window.setTimeout(() => { metroCardDraw.hidden = true; }, 2800);
     lastCardKey = key;
+    metroCardOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+    metroCardOverlay.classList.remove('is-revealing');
+    void metroCardOverlay.offsetWidth;
+    metroCardOverlay.classList.add('is-revealing');
+    if (cardDrawTimer) window.clearTimeout(cardDrawTimer);
+    if (isBotTurn) {
+      cardDrawTimer = window.setTimeout(() => {
+        if (latestMetroRuntimeState?.pendingCard) {
+          metroCardOverlay.hidden = true;
+          document.body.classList.remove('overlay-open');
+        }
+      }, METRO_CARD_BOT_OVERLAY_MS);
+    }
+  } else if (!isMyCardTurn && !isBotTurn) {
+    metroCardOverlay.hidden = false;
   }
 }
 
-function showLatestMetroEvent(runtimeState: any) {
-  const latestEvent = runtimeState.log[runtimeState.log.length - 1];
-  if (!latestEvent || !lastMetroEventKey) {
-    lastMetroEventKey = latestEvent || '';
+function dismissMetroCard() {
+  if (!latestMetroRuntimeState?.pendingCard) {
+    metroCardOverlay.hidden = true;
+    document.body.classList.remove('overlay-open');
     return;
   }
-  if (latestEvent === lastMetroEventKey) return;
-  lastMetroEventKey = latestEvent;
-  metroEventToast.textContent = latestEvent.replace(/^[^A-Za-zÄÖÜäöüß]*/, '');
+  sendMetroAction({ type: 'DISMISS_CARD' });
+  metroCardOverlay.hidden = true;
+  document.body.classList.remove('overlay-open');
+}
+
+let metroEventQueue: string[] = [];
+let metroEventToastBusy = false;
+
+function pumpMetroEventQueue() {
+  if (metroEventToastBusy) return;
+  const next = metroEventQueue.shift();
+  if (!next) return;
+  metroEventToastBusy = true;
+  metroEventToast.textContent = next.replace(/^[^A-Za-zÄÖÜäöüß]*/, '');
   metroEventToast.hidden = false;
   metroEventToast.classList.remove('is-visible');
   void metroEventToast.offsetWidth;
@@ -1126,8 +1314,34 @@ function showLatestMetroEvent(runtimeState: any) {
   if (eventToastTimer) window.clearTimeout(eventToastTimer);
   eventToastTimer = window.setTimeout(() => {
     metroEventToast.classList.remove('is-visible');
-    window.setTimeout(() => { metroEventToast.hidden = true; }, 180);
-  }, 2600);
+    window.setTimeout(() => {
+      metroEventToast.hidden = true;
+      metroEventToastBusy = false;
+      pumpMetroEventQueue();
+    }, 180);
+  }, METRO_EVENT_TOAST_MS);
+}
+
+function showLatestMetroEvent(runtimeState: any) {
+  const log: string[] = runtimeState.log || [];
+  const latestEvent = log[log.length - 1];
+  if (!latestEvent || !lastMetroEventKey) {
+    lastMetroEventKey = latestEvent || '';
+    return;
+  }
+  if (latestEvent === lastMetroEventKey) return;
+
+  // Collect ALL new log entries since the last seen one (not just the latest),
+  // so buys, rent payments etc. are not skipped when several happen at once.
+  const lastSeenIndex = log.lastIndexOf(lastMetroEventKey);
+  const fresh = lastSeenIndex >= 0 ? log.slice(lastSeenIndex + 1) : [latestEvent];
+  lastMetroEventKey = latestEvent;
+
+  metroEventQueue.push(...fresh);
+  if (metroEventQueue.length > METRO_EVENT_TOAST_QUEUE_MAX) {
+    metroEventQueue = metroEventQueue.slice(-METRO_EVENT_TOAST_QUEUE_MAX);
+  }
+  pumpMetroEventQueue();
 }
 
 function playMetroSound(runtimeState: any) {
@@ -1137,9 +1351,6 @@ function playMetroSound(runtimeState: any) {
   }
   if (runtimeState.dice[0] !== previousMetroRuntimeState.dice[0] || runtimeState.dice[1] !== previousMetroRuntimeState.dice[1]) {
     audio.play('roll');
-    metroDice.classList.remove('is-rolling');
-    void metroDice.offsetWidth;
-    metroDice.classList.add('is-rolling');
   }
   const previousLogLength = previousMetroRuntimeState.log.length;
   if (runtimeState.log.length > previousLogLength) {
@@ -1246,6 +1457,7 @@ function formatMetroPhase(phase: string) {
     tile_action: 'Feldaktion wählen',
     turn_end: 'Zug abschließen',
     auction: 'Auktion läuft',
+    card_reveal: 'Karte lesen',
     gameover: 'Spiel beendet'
   };
   return labels[phase] || phase;
@@ -1288,10 +1500,6 @@ btnStartGame.addEventListener('click', () => {
   currentRoom?.send('START_GAME');
 });
 
-metrovillePresetSelect.addEventListener('change', () => {
-  currentRoom?.send('SET_GAME_PRESET', { preset: metrovillePresetSelect.value });
-});
-
 btnLeaveRoom.addEventListener('click', () => {
   currentRoom?.leave();
 });
@@ -1301,6 +1509,7 @@ btnGameLeave.addEventListener('click', () => {
 });
 
 function sendMetroAction(action: any) {
+  if (metroPresentation.movementLocked && action.type !== 'DISMISS_CARD') return;
   audio.play('click');
   currentRoom?.send('GAME_ACTION', action);
 }
@@ -1376,8 +1585,14 @@ metroPropertyClose.addEventListener('click', closePropertyOverlay);
 metroPropertyOverlay.addEventListener('click', (event) => {
   if (event.target === metroPropertyOverlay) closePropertyOverlay();
 });
+metroCardOverlayClose.addEventListener('click', dismissMetroCard);
+metroCardOverlay.addEventListener('click', (event) => {
+  if (event.target === metroCardOverlay) dismissMetroCard();
+});
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !metroPropertyOverlay.hidden) closePropertyOverlay();
+  if (event.key === 'Escape' && !metroCardOverlay.hidden) dismissMetroCard();
 });
 
 btnCopyLink.addEventListener('click', () => {

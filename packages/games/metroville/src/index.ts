@@ -104,11 +104,20 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
     const player = state.players.find(p => p.id === playerId);
     if (!player) return { type: 'END_TURN' };
 
-    // In Jail
+    if (state.phase === 'card_reveal') {
+      return { type: 'DISMISS_CARD' };
+    }
+
+    // In Jail — only escape actions during roll; after a failed attempt the turn must end.
     if (player.inJail) {
-      if (player.getOutOfJailCards > 0) return { type: 'USE_JAIL_CARD' };
-      if (player.money >= 50 && player.jailTurns >= 2) return { type: 'PAY_JAIL_FINE' };
-      return { type: 'ROLL_DICE' };
+      if (state.phase === 'turn_end') {
+        return { type: 'END_TURN' };
+      }
+      if (state.phase === 'roll') {
+        if (player.getOutOfJailCards > 0) return { type: 'USE_JAIL_CARD' };
+        if (player.money >= 50 && player.jailTurns >= 2) return { type: 'PAY_JAIL_FINE' };
+        return { type: 'ROLL_DICE' };
+      }
     }
 
     // Roll Phase
@@ -146,7 +155,10 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
               const districtFields = DISTRICT_MAP[field.district] || [];
               const ownsAll = districtFields.every(fidx => state.properties[fidx]?.ownerId === playerId);
               if (ownsAll) {
-                return { type: 'BUILD_HOUSE', propertyIndex: idx };
+                const buildAction: MetrovilleAction = { type: 'BUILD_HOUSE', propertyIndex: idx };
+                if (MetrovilleModule.validateAction(state, buildAction, playerId).valid) {
+                  return buildAction;
+                }
               }
             }
           }
@@ -226,6 +238,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       chanceDeck,
       communityDeck,
       lastDrawnCard: null,
+      pendingCard: null,
       auction: null,
       pendingTrade: null,
       winnerId: null,
@@ -319,6 +332,20 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         return { valid: false, error: 'Bankrott kann jetzt nicht erklärt werden' };
       }
       return { valid: true };
+    }
+
+    if (action.type === 'DISMISS_CARD') {
+      if (state.phase !== 'card_reveal' || !state.pendingCard) {
+        return { valid: false, error: 'Keine Karte zum Bestätigen' };
+      }
+      if (state.currentTurnPlayerId !== playerId) {
+        return { valid: false, error: 'Du bist nicht am Zug' };
+      }
+      return { valid: true };
+    }
+
+    if (state.phase === 'card_reveal') {
+      return { valid: false, error: 'Bestätige zuerst die gezogene Karte' };
     }
 
     // Default turn-based actions require current turn
@@ -686,6 +713,18 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       return s;
     }
 
+    // DISMISS CARD (apply effect after reveal)
+    if (action.type === 'DISMISS_CARD' && s.pendingCard) {
+      const card = ALL_CARDS_MAP[s.pendingCard.cardId];
+      if (card) {
+        card.action(s, player.id);
+        checkBankruptcy(s, player);
+      }
+      s.pendingCard = null;
+      s.phase = 'turn_end';
+      return s;
+    }
+
     // END TURN
     if (action.type === 'END_TURN') {
       // Check turn limit for Blitz mode
@@ -806,11 +845,10 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
     const card = ALL_CARDS_MAP[cardId];
     if (card) {
       state.lastDrawnCard = { deck: card.deck, title: card.title, text: card.text };
+      state.pendingCard = { cardId, deck: card.deck, title: card.title, text: card.text };
       state.log.push(`🎴 ${isChance ? 'Chance' : 'Gemeinschaft'}: "${card.title}" - ${card.text}`);
-      card.action(state, player.id);
-      checkBankruptcy(state, player);
     }
-    state.phase = 'turn_end';
+    state.phase = 'card_reveal';
     return;
   }
 

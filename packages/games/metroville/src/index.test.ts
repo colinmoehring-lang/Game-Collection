@@ -154,6 +154,17 @@ describe('MetroVille Rule Engine', () => {
     expect(nextState.properties[1].isMortgaged).toBe(true);
   });
 
+  it('bot ends turn after a failed jail roll instead of rolling again', () => {
+    const bot = MetrovilleModule.createBot!('medium');
+    let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-jail-bot');
+    state.players[0].inJail = true;
+    state.players[0].jailTurns = 1;
+    state.phase = 'turn_end';
+    state.currentTurnPlayerId = 'p1';
+    const action = bot.chooseAction(state, 'p1');
+    expect(action.type).toBe('END_TURN');
+  });
+
   it('handles paying a jail fine and using a jail card', () => {
     let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-jail');
     state.players[0].inJail = true;
@@ -259,6 +270,11 @@ describe('MetroVille Rule Engine', () => {
     chanceState.players[0].position = 5;
     const afterChance = MetrovilleModule.applyAction(chanceState, { type: 'ROLL_DICE' });
     expect(afterChance.lastDrawnCard?.deck).toBe('chance');
+    expect(afterChance.phase).toBe('card_reveal');
+    expect(afterChance.pendingCard?.cardId).toBeTruthy();
+    const afterDismiss = MetrovilleModule.applyAction(afterChance, { type: 'DISMISS_CARD' });
+    expect(afterDismiss.phase).toBe('turn_end');
+    expect(afterDismiss.pendingCard).toBeNull();
 
     const communityState = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], seedForDiceTotal(2));
     communityState.players[0].position = 0;

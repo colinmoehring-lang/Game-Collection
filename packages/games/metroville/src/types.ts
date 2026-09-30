@@ -92,7 +92,8 @@ export interface MetrovilleState {
   dice: [number, number];
   doublesRolledCount: number;
   hasRolled: boolean;
-  phase: 'roll' | 'tile_action' | 'turn_end' | 'auction' | 'gameover';
+  phase: 'roll' | 'tile_action' | 'turn_end' | 'auction' | 'card_reveal' | 'gameover';
+  pendingCard: { cardId: string; deck: CardDeck; title: string; text: string } | null;
   properties: Record<number, PropertyState>;
   chanceDeck: string[]; // Card IDs
   communityDeck: string[];
@@ -120,4 +121,5 @@ export type MetrovilleAction =
   | { type: 'OFFER_TRADE'; offer: Omit<TradeOffer, 'id'> }
   | { type: 'ACCEPT_TRADE'; tradeId: string }
   | { type: 'DECLINE_TRADE'; tradeId: string }
-  | { type: 'DECLARE_BANKRUPTCY' };
+  | { type: 'DECLARE_BANKRUPTCY' }
+  | { type: 'DISMISS_CARD' };

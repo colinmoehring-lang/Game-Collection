@@ -91,8 +91,15 @@
         </div>
 
         <div id="metroville-preset-section" class="metro-lobby-preset" hidden>
-          <label for="metroville-preset-select">MetroVille-Preset</label>
-          <select id="metroville-preset-select" aria-describedby="metroville-preset-description"></select>
+          <label id="metroville-preset-label" for="metroville-preset-trigger">MetroVille-Preset</label>
+          <input id="metroville-preset-value" type="hidden" value="standard" />
+          <div class="game-mode-picker" id="metroville-preset-picker">
+            <button class="game-mode-trigger" id="metroville-preset-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="metroville-preset-options" aria-labelledby="metroville-preset-label metroville-preset-display">
+              <span id="metroville-preset-display">Standard MetroVille</span>
+              <span class="game-mode-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="game-mode-options" id="metroville-preset-options" role="listbox" aria-labelledby="metroville-preset-label" hidden></div>
+          </div>
           <p id="metroville-preset-description" role="status" aria-live="polite"></p>
         </div>
 
@@ -133,13 +140,8 @@
                   <strong id="metro-center-title">Stadt der Möglichkeiten</strong>
                   <span id="metro-center-detail">Warte auf den ersten Zug.</span>
                   <div class="metro-dice" id="metro-dice" aria-label="Letzter Würfelwurf">
-                    <span class="metro-die" id="metro-die-one">1</span>
-                    <span class="metro-die" id="metro-die-two">1</span>
-                  </div>
-                  <div class="metro-card-draw" id="metro-card-draw" hidden>
-                    <span class="metro-card-draw-deck" id="metro-card-draw-deck">CHANCE</span>
-                    <strong id="metro-card-draw-title">-</strong>
-                    <span id="metro-card-draw-text">-</span>
+                    <span class="metro-die" id="metro-die-one" aria-hidden="true"><span class="metro-die-pips"></span></span>
+                    <span class="metro-die" id="metro-die-two" aria-hidden="true"><span class="metro-die-pips"></span></span>
                   </div>
                 </div>
               </div>
@@ -314,6 +316,17 @@
       <div class="metro-property-dialog" role="dialog" aria-modal="true" aria-label="Grundstückskarte">
         <button class="metro-property-close" id="metro-property-close" type="button" aria-label="Grundstückskarte schließen">Schließen</button>
         <div id="metro-property-overlay-card"></div>
+      </div>
+    </div>
+
+    <div id="metro-card-overlay" class="metro-property-overlay" hidden>
+      <div class="metro-property-dialog metro-card-dialog" role="dialog" aria-modal="true" aria-labelledby="metro-card-overlay-deck">
+        <button class="metro-property-close" id="metro-card-overlay-close" type="button" aria-label="Karte schließen">Schließen</button>
+        <article class="metro-card-overlay-card" id="metro-card-overlay-card">
+          <span class="metro-card-draw-deck" id="metro-card-overlay-deck">CHANCE</span>
+          <strong id="metro-card-overlay-title">-</strong>
+          <p id="metro-card-overlay-text">-</p>
+        </article>
       </div>
     </div>
 

@@ -347,7 +347,7 @@ select:focus-visible {
 }
 
 .metro-lobby-preset label,
-.metro-lobby-preset select {
+.metro-lobby-preset .game-mode-picker {
   grid-column: 1;
   margin: 0;
 }
@@ -472,10 +472,25 @@ button.danger {
   margin-left: 6px;
 }
 
-.tag-host { background: var(--mustard); color: #fff; }
-.tag-bot { background: var(--sky); color: #fff; }
-.tag-ready { background: var(--teal); color: #fff; }
-.tag-wait { background: var(--paper); color: var(--charcoal); }
+.tag-host {
+  background: var(--mustard);
+  color: #fff;
+}
+
+.tag-bot {
+  background: var(--sky);
+  color: #fff;
+}
+
+.tag-ready {
+  background: var(--teal);
+  color: #fff;
+}
+
+.tag-wait {
+  background: var(--paper);
+  color: var(--charcoal);
+}
 
 /* Tic Tac Toe Grid in Multiplayer */
 .tictactoe-board {
@@ -509,9 +524,17 @@ button.danger {
   background: #fff;
 }
 
-.cell.x { color: var(--terracotta); }
-.cell.o { color: var(--teal); }
-.cell.winning { background: #FCEFD2; }
+.cell.x {
+  color: var(--terracotta);
+}
+
+.cell.o {
+  color: var(--teal);
+}
+
+.cell.winning {
+  background: #FCEFD2;
+}
 
 .status-bar {
   text-align: center;
@@ -615,14 +638,14 @@ button.danger {
   align-items: stretch;
   justify-content: flex-start;
   gap: 3px;
-  padding: 5px;
+  padding: 5px 5px 16px;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   background: var(--cream);
   color: var(--ink);
   text-align: left;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .metro-tile:hover:not(:disabled),
@@ -707,15 +730,16 @@ button.danger {
 .metro-token-stack {
   position: absolute;
   left: 50%;
-  bottom: 3px;
-  z-index: 3;
+  bottom: -2px;
+  z-index: 4;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   width: max-content;
-  max-width: calc(100% - 4px);
-  overflow: hidden;
-  padding-left: 2px;
+  max-width: calc(100% + 8px);
+  overflow: visible;
+  padding: 0 2px;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -924,7 +948,7 @@ button.danger {
 }
 
 .metro-trade-status,
-.metro-auction-panel > span:not(.panel-kicker) {
+.metro-auction-panel>span:not(.panel-kicker) {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   line-height: 1.4;
@@ -973,7 +997,7 @@ button.danger {
   margin-bottom: 10px;
 }
 
-.metro-card-shelf-header > span:last-child {
+.metro-card-shelf-header>span:last-child {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   color: var(--warm-grey);
@@ -1128,8 +1152,13 @@ body.overlay-open {
 }
 
 @keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .metro-dice {
@@ -1147,13 +1176,158 @@ body.overlay-open {
   border-radius: 8px;
   background: var(--cream);
   box-shadow: 3px 3px 0 var(--charcoal);
-  font-family: 'Syne', sans-serif;
-  font-size: 24px;
-  font-weight: 800;
+}
+
+.metro-die-pips {
+  display: grid;
+  grid-template-columns: repeat(3, 8px);
+  grid-template-rows: repeat(3, 8px);
+  gap: 2px;
+  width: 28px;
+  height: 28px;
+}
+
+.metro-die-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--charcoal);
 }
 
 .metro-dice.is-rolling .metro-die {
   animation: dice-tumble 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metro-dice.is-rolling .metro-die {
+    animation: none;
+  }
+}
+
+.metro-deck-stacks {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.metro-deck {
+  position: relative;
+  width: 84px;
+  height: 104px;
+  border: 2px solid var(--charcoal);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 var(--charcoal);
+}
+
+.metro-deck::before,
+.metro-deck::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid rgba(28, 25, 23, 0.25);
+  border-radius: 2px;
+  background: inherit;
+  transform: translate(2px, -2px);
+}
+
+.metro-deck::after {
+  transform: translate(4px, -4px);
+  opacity: 0.55;
+}
+
+.metro-deck-chance {
+  background: linear-gradient(145deg, #c84b2f, #9a3318);
+  color: var(--cream);
+}
+
+.metro-deck-community {
+  background: linear-gradient(145deg, #1d7a72, #12564f);
+  color: var(--cream);
+}
+
+.metro-deck-label {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.metro-deck.is-drawing {
+  animation: deck-draw 480ms ease-out;
+}
+
+@keyframes deck-draw {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  40% {
+    transform: translateY(-8px) scale(1.03);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.metro-card-overlay-card {
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+.metro-card-dialog .metro-card-draw-deck {
+  font-size: 10px;
+}
+
+.metro-card-dialog strong {
+  display: block;
+  margin: 12px 0 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+}
+
+.metro-card-dialog p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.metro-property-overlay.metro-card-chance .metro-card-overlay-card {
+  border-top: 6px solid var(--terracotta);
+}
+
+.metro-property-overlay.metro-card-community .metro-card-overlay-card {
+  border-top: 6px solid var(--teal);
+}
+
+.metro-token.is-hopping {
+  animation: token-hop 180ms ease-out;
+}
+
+@keyframes token-hop {
+  0% {
+    transform: translateY(0);
+  }
+
+  45% {
+    transform: translateY(-7px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .metro-card-draw {
@@ -1191,7 +1365,7 @@ body.overlay-open {
   font-size: 16px;
 }
 
-.metro-card-draw > span:last-child {
+.metro-card-draw>span:last-child {
   display: block;
   font-size: 11px;
   font-style: italic;
@@ -1232,23 +1406,48 @@ body.colorblind-mode .metro-tile[data-owner]::after {
 }
 
 @keyframes dice-tumble {
-  0% { transform: rotate(0) translateY(0); }
-  45% { transform: rotate(16deg) translateY(-12px); }
-  100% { transform: rotate(0) translateY(0); }
+  0% {
+    transform: rotate(0) translateY(0);
+  }
+
+  45% {
+    transform: rotate(16deg) translateY(-12px);
+  }
+
+  100% {
+    transform: rotate(0) translateY(0);
+  }
 }
 
 @keyframes card-flip {
-  0% { opacity: 0; transform: rotateY(90deg) scale(0.92); }
-  100% { opacity: 1; transform: rotateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: rotateY(0) scale(1);
+  }
 }
 
 @keyframes toast-in {
-  to { opacity: 1; transform: translate(-50%, 0); }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 @keyframes turn-pulse {
-  0%, 100% { box-shadow: inset 4px 0 var(--terracotta); }
-  50% { box-shadow: inset 7px 0 var(--terracotta); }
+
+  0%,
+  100% {
+    box-shadow: inset 4px 0 var(--terracotta);
+  }
+
+  50% {
+    box-shadow: inset 7px 0 var(--terracotta);
+  }
 }
 
 .poker-game[hidden] {
@@ -1379,7 +1578,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   color: var(--terracotta);
 }
 
-.poker-card > strong {
+.poker-card>strong {
   font-size: 25px;
   line-height: 1;
 }
@@ -1475,7 +1674,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   opacity: 0.58;
 }
 
-.poker-seat > strong {
+.poker-seat>strong {
   max-width: 100%;
   overflow: hidden;
   color: var(--charcoal);
@@ -1485,13 +1684,13 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   white-space: nowrap;
 }
 
-.poker-seat > span:not(.poker-seat-cards) {
+.poker-seat>span:not(.poker-seat-cards) {
   color: var(--teal-dark);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
 }
 
-.poker-seat > small {
+.poker-seat>small {
   color: var(--warm-grey);
   font-family: 'DM Mono', monospace;
   font-size: 8px;
@@ -1511,7 +1710,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   font-size: 10px;
 }
 
-.poker-seat-cards .poker-card > strong {
+.poker-seat-cards .poker-card>strong {
   font-size: 14px;
 }
 
@@ -1531,7 +1730,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   height: 25px;
 }
 
-.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card > strong {
+.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card>strong {
   font-size: 9px;
 }
 
@@ -1600,7 +1799,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   padding-top: 12px;
 }
 
-.poker-draw-actions > span {
+.poker-draw-actions>span {
   flex: 1 0 100%;
   color: var(--teal-dark);
   font-family: 'DM Mono', monospace;
@@ -1661,7 +1860,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   color: var(--teal-dark);
 }
 
-.poker-panel > strong {
+.poker-panel>strong {
   display: block;
   margin-top: 8px;
   color: var(--terracotta-dark);
@@ -1735,7 +1934,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   font-weight: 700;
 }
 
-.poker-rank-list li > span:last-child {
+.poker-rank-list li>span:last-child {
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -1931,7 +2130,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     height: 54px;
   }
 
-  .poker-card > strong {
+  .poker-card>strong {
     font-size: 20px;
   }
 
@@ -1940,12 +2139,12 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     padding: 4px;
   }
 
-  .poker-seat > strong {
+  .poker-seat>strong {
     font-size: 9px;
   }
 
-  .poker-seat > span:not(.poker-seat-cards),
-  .poker-seat > small {
+  .poker-seat>span:not(.poker-seat-cards),
+  .poker-seat>small {
     font-size: 7px;
   }
 
@@ -1955,7 +2154,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     height: 28px;
   }
 
-  .poker-seat-cards .poker-card > strong {
+  .poker-seat-cards .poker-card>strong {
     font-size: 12px;
   }
 
@@ -1969,7 +2168,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     height: 21px;
   }
 
-  .poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card > strong {
+  .poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card>strong {
     font-size: 8px;
   }
 
@@ -1991,7 +2190,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     text-align: left;
   }
 
-  .poker-actions > button {
+  .poker-actions>button {
     flex: 1 1 30%;
   }
 
@@ -2006,7 +2205,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   }
 
   .metro-lobby-preset label,
-  .metro-lobby-preset select,
+  .metro-lobby-preset .game-mode-picker,
   .metro-lobby-preset p {
     grid-column: 1;
     grid-row: auto;
@@ -2107,7 +2306,7 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     gap: 5px;
   }
 
-  .nav-links > span:first-child {
+  .nav-links>span:first-child {
     display: none;
   }
 

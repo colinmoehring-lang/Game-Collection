@@ -3,6 +3,11 @@ import type { Client } from 'colyseus';
 const { Room } = colyseus;
 import { GameRoomState, PlayerSchema } from './schema/GameRoomState.js';
 import { generateRoomCode, type GameModule, type Player } from '@metroville/game-sdk';
+import {
+  BOT_TURN_WATCHDOG_MS,
+  computeBotActionDelay,
+  metroBotFallbackAction
+} from './botTurn.js';
 import { MetrovilleModule } from '@metroville/game-metroville';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
 import { TexasHoldemModule } from '@metroville/game-texasholdem';
@@ -23,6 +28,10 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
   private runtimeGameState: any = null;
   private botInstances: Map<string, any> = new Map();
   private gameStateRevision = 0;
+  private botTurnTimer: ReturnType<typeof setTimeout> | null = null;
+  private botWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private botTurnSnapshot: { playerId: string; phase: string; revision: number } | null = null;
+  private botTurnRevision = 0;
 
   onCreate(options: any) {
     this.setState(new GameRoomState());
@@ -231,11 +240,28 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
 
     const validation = this.gameModule.validateAction(this.runtimeGameState, action, playerId);
     if (!validation.valid) {
-      console.warn(`[Room ${this.state.roomCode}] Action invalid: ${validation.error}`);
+      console.warn(`[Room ${this.state.roomCode}] Action invalid from ${playerId}: ${action?.type} — ${validation.error}`);
+      if (this.botInstances.has(playerId)) {
+        const fallback = this.state.gameId === 'metroville'
+          ? metroBotFallbackAction(this.runtimeGameState)
+          : null;
+        if (fallback && fallback.type !== action?.type) {
+          console.warn(`[Room ${this.state.roomCode}] Bot fallback retry: ${fallback.type}`);
+          this.executeAction(fallback, playerId);
+        }
+      }
       return;
     }
 
+    const stateBefore = this.state.gameId === 'metroville'
+      ? JSON.parse(JSON.stringify(this.runtimeGameState))
+      : null;
     this.runtimeGameState = this.gameModule.applyAction(this.runtimeGameState, action);
+    if (stateBefore && this.state.gameId === 'metroville') {
+      console.log(
+        `[Room ${this.state.roomCode}] Bot/state ${playerId}: ${action.type} → phase=${this.runtimeGameState.phase}`
+      );
+    }
 
     if (this.gameModule.isGameOver(this.runtimeGameState)) {
       this.state.status = 'gameover';
@@ -249,22 +275,67 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     this.publishGameState();
     this.syncTurnPlayerId();
 
-    this.triggerBotTurnIfNeeded();
+    this.scheduleBotTurn(stateBefore);
   }
 
-  private async triggerBotTurnIfNeeded() {
+  private clearBotTimers() {
+    if (this.botTurnTimer) {
+      clearTimeout(this.botTurnTimer);
+      this.botTurnTimer = null;
+    }
+    if (this.botWatchdogTimer) {
+      clearTimeout(this.botWatchdogTimer);
+      this.botWatchdogTimer = null;
+    }
+  }
+
+  private scheduleBotTurn(stateBefore: any = null) {
+    this.clearBotTimers();
     if (this.state.status !== 'playing' || !this.state.currentTurnPlayerId) return;
 
-    const botInstance = this.botInstances.get(this.state.currentTurnPlayerId);
-    if (botInstance) {
-      setTimeout(async () => {
-        if (this.state.status !== 'playing') return;
-        const botAction = await botInstance.chooseAction(this.runtimeGameState, this.state.currentTurnPlayerId);
-        if (botAction) {
-          this.executeAction(botAction, this.state.currentTurnPlayerId);
-        }
-      }, 500);
-    }
+    const botId = this.state.currentTurnPlayerId;
+    const botInstance = this.botInstances.get(botId);
+    if (!botInstance) return;
+
+    const delay = computeBotActionDelay(this.state.gameId, stateBefore, this.runtimeGameState);
+    const turnRevision = ++this.botTurnRevision;
+    this.botTurnSnapshot = {
+      playerId: botId,
+      phase: this.runtimeGameState?.phase || '',
+      revision: turnRevision
+    };
+
+    console.log(
+      `[Room ${this.state.roomCode}] Bot ${botId} scheduled in ${delay}ms (phase=${this.botTurnSnapshot.phase})`
+    );
+
+    this.botTurnTimer = setTimeout(async () => {
+      if (this.state.status !== 'playing' || this.state.currentTurnPlayerId !== botId) return;
+      if (turnRevision !== this.botTurnRevision) return;
+      const botAction = await botInstance.chooseAction(this.runtimeGameState, botId);
+      if (botAction) {
+        this.executeAction(botAction, botId);
+      }
+    }, delay);
+
+    this.botWatchdogTimer = setTimeout(() => {
+      if (this.state.status !== 'playing' || this.state.currentTurnPlayerId !== botId) return;
+      if (!this.botTurnSnapshot || this.botTurnSnapshot.revision !== turnRevision) return;
+      const phase = this.runtimeGameState?.phase;
+      if (this.botTurnSnapshot.phase === phase) {
+        const fallback = this.state.gameId === 'metroville'
+          ? metroBotFallbackAction(this.runtimeGameState)
+          : { type: 'CHECK' };
+        console.warn(
+          `[Room ${this.state.roomCode}] Bot watchdog: forcing ${fallback?.type} for ${botId} (stuck in ${phase})`
+        );
+        if (fallback) this.executeAction(fallback, botId);
+      }
+    }, BOT_TURN_WATCHDOG_MS);
+  }
+
+  private triggerBotTurnIfNeeded() {
+    this.scheduleBotTurn(null);
   }
 
   private syncTurnPlayerId() {
