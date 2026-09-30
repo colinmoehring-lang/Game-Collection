@@ -67,6 +67,17 @@ describe('MetroVille Rule Engine', () => {
     expect(state.phase).toBe('turn_end');
   });
 
+  it('rejects buying a property when the player cannot afford it', () => {
+    const state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-low-funds');
+    state.players[0].position = 1;
+    state.players[0].money = 59;
+    state.phase = 'tile_action';
+
+    const result = MetrovilleModule.validateAction(state, { type: 'BUY_PROPERTY' }, 'p1');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Nicht genug Taler zum Kauf');
+  });
+
   it('calculates rents with single, full district and house upgrades', () => {
     let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-1');
     state.properties[1].ownerId = 'p1'; // Alte Allee (base rent: 2)

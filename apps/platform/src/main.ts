@@ -10,8 +10,8 @@ const BACKEND_URL = window.location.hostname === 'localhost'
 
 const client = new Client(BACKEND_URL);
 let currentRoom: Room<any> | null = null;
-let currentSessionToken = localStorage.getItem('metroville_session_token') || ('tok-' + Math.random().toString(36).substring(2, 9));
-localStorage.setItem('metroville_session_token', currentSessionToken);
+let currentSessionToken = sessionStorage.getItem('metroville_session_token') || ('tok-' + Math.random().toString(36).substring(2, 9));
+sessionStorage.setItem('metroville_session_token', currentSessionToken);
 
 // DOM Elements
 const connIndicator = document.getElementById('conn-indicator')!;
@@ -80,6 +80,7 @@ const multiBoard = document.getElementById('multi-board')!;
 const metroBoard = document.getElementById('metro-board')!;
 const metroTurnName = document.getElementById('metro-turn-name')!;
 const metroTurnPhase = document.getElementById('metro-turn-phase')!;
+const metroActionContext = document.getElementById('metro-action-context')!;
 const metroCenterTitle = document.getElementById('metro-center-title')!;
 const metroCenterDetail = document.getElementById('metro-center-detail')!;
 const metroDice = document.getElementById('metro-dice')!;
@@ -493,6 +494,36 @@ function renderGame(state: any) {
   });
 }
 
+function describeMetroDecision(runtimeState: any, player: any): string {
+  if (runtimeState.phase === 'roll') {
+    return player?.inJail ? 'würfelt, um die Sicherheitszone zu verlassen' : 'würfelt';
+  }
+  if (runtimeState.phase === 'tile_action') {
+    const field = player ? METROVILLE_FIELDS[player.position] : null;
+    return field ? `entscheidet über ${field.name} (kaufen oder passen)` : 'entscheidet über einen Grundstückskauf';
+  }
+  if (runtimeState.phase === 'auction') {
+    const auction = runtimeState.auction;
+    return auction ? `bietet mindestens ${auction.highestBid + 10} Taler oder passt` : 'entscheidet über ein Gebot';
+  }
+  if (runtimeState.phase === 'turn_end') return 'kann den Zug beenden, bauen oder handeln';
+  if (runtimeState.phase === 'gameover') return 'das Spiel ist beendet';
+  return formatMetroPhase(runtimeState.phase);
+}
+
+function groupMetroLogEntries(entries: string[]): string[][] {
+  const groups: string[][] = [];
+  entries.forEach(entry => {
+    const startsRoll = entry.includes(' würfelt [');
+    const currentGroup = groups[groups.length - 1];
+    const isExtraRoll = currentGroup?.some(event => event.includes('darf noch einmal würfeln')) || false;
+    if (startsRoll && currentGroup && !isExtraRoll) groups.push([entry]);
+    else if (currentGroup) currentGroup.push(entry);
+    else groups.push([entry]);
+  });
+  return groups;
+}
+
 function renderMetroville(roomState: any, runtimeState: any) {
   tictactoeGame.hidden = true;
   texasHoldemGame.hidden = true;
@@ -505,20 +536,24 @@ function renderMetroville(roomState: any, runtimeState: any) {
   const lastRoller = runtimeState.players.find((player: any) => player.id === runtimeState.lastRollerId);
   const isMyTurn = roomState.currentTurnPlayerId === mySessionId;
   const currentField = currentPlayer ? METROVILLE_FIELDS[currentPlayer.position] : null;
+  const roomTurnPlayer = runtimeState.players.find((player: any) => player.id === roomState.currentTurnPlayerId);
+  const turnField = roomTurnPlayer ? METROVILLE_FIELDS[roomTurnPlayer.position] : null;
   playMetroSound(runtimeState);
 
   gameStatusBar.textContent = roomState.status === 'gameover'
     ? `Spiel beendet: ${runtimeState.winReason || 'Endstand erreicht'}`
     : isMyTurn
       ? 'Du bist am Zug.'
-      : `Warten auf ${turnPlayer?.name || 'den nächsten Spieler'}.`;
+      : `Warten auf ${roomTurnPlayer?.name || 'den nächsten Spieler'} · ${turnField?.name || 'Standort unbekannt'} · ${describeMetroDecision(runtimeState, roomTurnPlayer)}`;
 
   gameTitleHeader.textContent = 'MetroVille: City of Fortune';
-  metroTurnName.textContent = turnPlayer?.name || 'Unbekannt';
-  metroTurnPhase.textContent = formatMetroPhase(runtimeState.phase);
+  metroTurnName.textContent = roomTurnPlayer?.name || 'Unbekannt';
+  metroTurnPhase.textContent = isMyTurn
+    ? formatMetroPhase(runtimeState.phase)
+    : `${turnField?.name || 'Standort unbekannt'} · ${describeMetroDecision(runtimeState, roomTurnPlayer)}`;
   metroCenterTitle.textContent = runtimeState.phase === 'gameover'
     ? 'Die Stadt hat entschieden'
-    : currentField?.name || 'Stadt der Möglichkeiten';
+    : (isMyTurn ? currentField?.name : turnField?.name) || 'Stadt der Möglichkeiten';
   metroCenterDetail.textContent = runtimeState.phase === 'gameover'
     ? runtimeState.winReason || 'Spiel beendet'
     : `Runde ${runtimeState.turnCount + 1}`;
@@ -547,7 +582,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
   METROVILLE_FIELDS.forEach((field) => {
     const tile = document.createElement('button');
     const property = runtimeState.properties[field.index];
-    const isCurrentField = currentPlayer?.position === field.index;
+    const isCurrentField = roomTurnPlayer?.position === field.index;
     tile.className = `metro-tile tile-${field.type}${selectedPropertyIndex === field.index ? ' is-selected' : ''}${isCurrentField ? ' is-current' : ''}`;
     tile.dataset.field = String(field.index);
     tile.style.gridRow = String(getMetroGridPosition(field.index).row);
@@ -630,24 +665,119 @@ function renderMetroville(roomState: any, runtimeState: any) {
   renderAuctionControls(roomState, runtimeState, mySessionId);
 
   metroLog.innerHTML = '';
-  runtimeState.log.slice(-5).reverse().forEach((entry: string) => {
-    const line = document.createElement('p');
-    line.textContent = entry;
-    metroLog.appendChild(line);
+  groupMetroLogEntries(runtimeState.log).slice(-4).reverse().forEach((entries: string[]) => {
+    const group = document.createElement('section');
+    group.className = 'metro-log-group';
+    const rolls = entries.filter(entry => entry.includes(' würfelt [')).map(entry => {
+      const match = entry.match(/^(.+?) würfelt \[(.+?)\]/);
+      return match ? `${match[1]} · ${match[2].replace(', ', ' + ')}` : entry;
+    });
+    const heading = document.createElement('strong');
+    heading.className = 'metro-log-group-title';
+    heading.textContent = rolls.length ? rolls.join(' → ') : 'Spielereignisse';
+    group.appendChild(heading);
+    const events = document.createElement('div');
+    events.className = 'metro-log-group-events';
+    entries.filter(entry => !entry.includes(' würfelt [')).forEach((entry: string) => {
+      const line = document.createElement('p');
+      line.textContent = entry;
+      events.appendChild(line);
+    });
+    if (events.childElementCount > 0) group.appendChild(events);
+    metroLog.appendChild(group);
   });
 
   const canAct = isMyTurn && roomState.status === 'playing';
   const selectedProperty = selectedPropertyIndex === null ? null : runtimeState.properties[selectedPropertyIndex];
+  const selectedField = selectedPropertyIndex === null ? null : METROVILLE_FIELDS[selectedPropertyIndex];
+  const isUnownedBuyableField = Boolean(currentField?.cost && !runtimeState.properties[currentField.index]?.ownerId);
+  const buyValidation = currentPlayer && isUnownedBuyableField
+    ? MetrovilleModule.validateAction(runtimeState, { type: 'BUY_PROPERTY' }, currentPlayer.id)
+    : null;
+  const canBuy = canAct && runtimeState.phase === 'tile_action' && Boolean(buyValidation?.valid);
+  const buyDisabledReason = !canAct
+    ? roomState.status !== 'playing' ? 'Das Spiel läuft nicht.' : 'Warten, bis du am Zug bist.'
+    : runtimeState.phase !== 'tile_action'
+      ? 'Kaufen ist erst nach der Landung auf einem freien Grundstück möglich.'
+      : !isUnownedBuyableField
+        ? 'Dieses Feld kann nicht gekauft werden.'
+        : buyValidation?.error || 'Kaufen ist derzeit nicht möglich.';
+  const buildValidation = currentPlayer && selectedPropertyIndex !== null
+    ? MetrovilleModule.validateAction(runtimeState, { type: 'BUILD_HOUSE', propertyIndex: selectedPropertyIndex }, currentPlayer.id)
+    : null;
+  const canBuild = canAct && runtimeState.phase === 'turn_end' && selectedField?.type === 'property'
+    && selectedProperty?.ownerId === mySessionId && Boolean(buildValidation?.valid);
+  const buildDisabledReason = !canAct
+    ? roomState.status !== 'playing' ? 'Das Spiel läuft nicht.' : 'Warten, bis du am Zug bist.'
+    : runtimeState.phase !== 'turn_end'
+      ? 'Bauen ist am Ende deines Zuges möglich.'
+      : !selectedProperty || selectedProperty.ownerId !== mySessionId
+        ? 'Wähle zuerst eines deiner Grundstücke.'
+        : selectedField?.type !== 'property'
+          ? 'Auf diesem Feld kann nicht gebaut werden.'
+          : buildValidation?.error || 'Bauen ist derzeit nicht möglich.';
   setMetroActionState(metroActionRoll, canAct && runtimeState.phase === 'roll');
-  setMetroActionState(metroActionBuy, canAct && runtimeState.phase === 'tile_action' && Boolean(currentField?.cost && !runtimeState.properties[currentPlayer?.position]?.ownerId));
+  setMetroActionState(metroActionBuy, canBuy, buyDisabledReason);
   setMetroActionState(metroActionDecline, canAct && runtimeState.phase === 'tile_action');
-  setMetroActionState(metroActionEnd, canAct && runtimeState.phase === 'turn_end');
+  setMetroActionState(metroActionEnd, canAct && runtimeState.phase === 'turn_end', canAct ? 'Deinen Zug kannst du erst nach der Feldaktion beenden.' : buyDisabledReason);
   setMetroActionState(metroActionJailFine, canAct && currentPlayer?.inJail === true);
   setMetroActionState(metroActionJailCard, canAct && currentPlayer?.inJail === true && currentPlayer.getOutOfJailCards > 0);
-  setMetroActionState(metroActionBuild, canAct && Boolean(selectedProperty?.ownerId === mySessionId));
+  setMetroActionState(metroActionBuild, canBuild, buildDisabledReason);
   setMetroActionState(metroActionSell, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.houses > 0));
   setMetroActionState(metroActionMortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && !selectedProperty.isMortgaged));
   setMetroActionState(metroActionUnmortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.isMortgaged));
+  metroActionContext.textContent = describeMetroActionContext(roomState, runtimeState, isMyTurn, currentPlayer, currentField, buyDisabledReason, buildDisabledReason, canBuy, canBuild);
+}
+
+function describeMetroActionContext(
+  roomState: any,
+  runtimeState: any,
+  isMyTurn: boolean,
+  currentPlayer: any,
+  currentField: any,
+  buyDisabledReason: string,
+  buildDisabledReason: string,
+  canBuy: boolean,
+  canBuild: boolean
+): string {
+  if (roomState.status === 'gameover' || runtimeState.phase === 'gameover') return runtimeState.winReason || 'Das Spiel ist beendet.';
+  if (!isMyTurn) {
+    const activePlayer = runtimeState.players.find((player: any) => player.id === roomState.currentTurnPlayerId);
+    const field = activePlayer ? METROVILLE_FIELDS[activePlayer.position] : null;
+    return `Warten auf ${activePlayer?.name || 'den nächsten Spieler'} · ${field?.name || 'Standort unbekannt'} · ${describeMetroDecision(runtimeState, activePlayer)}.`;
+  }
+  if (runtimeState.phase === 'roll') {
+    return currentPlayer?.inJail
+      ? 'Würfle, um einen Pasch zu versuchen, oder nutze eine Freikarte beziehungsweise zahle die Gebühr.'
+      : 'Würfle, um über dein nächstes Feld zu entscheiden.';
+  }
+  if (runtimeState.phase === 'tile_action') {
+    const passOutcome = runtimeState.config.preset === 'classic_light'
+      ? 'Passen, um den Zug zu beenden.'
+      : 'Passen, um eine Versteigerung zu starten.';
+    if (canBuy) return `${currentField.name} kostet ${currentField.cost} Taler. Kaufen oder ${passOutcome}`;
+    if (currentField?.cost && currentPlayer && currentPlayer.money < currentField.cost) {
+      return `${currentField.name} kostet ${currentField.cost} Taler; du hast ${currentPlayer.money}. ${passOutcome}`;
+    }
+    return buyDisabledReason;
+  }
+  if (runtimeState.phase === 'auction') {
+    const auction = runtimeState.auction;
+    return auction ? `Gebot für ${METROVILLE_FIELDS[auction.propertyIndex]?.name || 'Grundstück'}: mindestens ${auction.highestBid + 10} Taler.` : 'Entscheide über das aktuelle Gebot.';
+  }
+  if (runtimeState.phase === 'turn_end') {
+    if (selectedPropertyIndex !== null && !canBuild && runtimeState.properties[selectedPropertyIndex]?.ownerId === currentPlayer?.id) {
+      return buildDisabledReason;
+    }
+    if (canBuild) return 'Du kannst bauen oder handeln und danach deinen Zug beenden.';
+    const ownsProperty = Object.entries(runtimeState.properties).some(([index, property]: [string, any]) =>
+      property.ownerId === currentPlayer?.id && METROVILLE_FIELDS[Number(index)]?.type === 'property' && property.houses < 5
+    );
+    return ownsProperty
+      ? 'Du kannst eines deiner Grundstücke für einen Ausbau auswählen, handeln oder den Zug beenden.'
+      : 'Dein Zug ist abgeschlossen. Du kannst noch handeln oder den Zug beenden.';
+  }
+  return formatMetroPhase(runtimeState.phase);
 }
 
 function createPokerCard(card: string | undefined, concealed = false) {
@@ -1014,11 +1144,24 @@ function renderTradeControls(roomState: any, runtimeState: any, mySessionId: str
   const pendingTrade = runtimeState.pendingTrade;
   const pendingForMe = pendingTrade?.toPlayerId === mySessionId;
   const canOffer = isMyTurn && roomState.status === 'playing' && runtimeState.phase === 'turn_end' && !pendingTrade && Boolean(target);
-  setMetroActionState(metroActionOfferTrade, canOffer);
+  const offerDisabledReason = pendingTrade
+    ? 'Es ist bereits ein Handelsangebot offen.'
+    : !target
+      ? 'Kein Handelspartner verfügbar.'
+      : roomState.status !== 'playing'
+        ? 'Handeln ist nur während eines laufenden Spiels möglich.'
+        : !isMyTurn
+          ? 'Handeln kannst du nur am Ende deines eigenen Zuges.'
+          : runtimeState.phase !== 'turn_end'
+            ? 'Handeln wird nach deiner Feldaktion möglich.'
+            : '';
+  setMetroActionState(metroActionOfferTrade, canOffer, offerDisabledReason);
   metroActionAcceptTrade.toggleAttribute('disabled', !pendingForMe);
+  metroActionAcceptTrade.title = pendingForMe ? '' : 'Es liegt kein Handelsangebot für dich vor.';
   metroActionDeclineTrade.toggleAttribute('disabled', !pendingForMe);
+  metroActionDeclineTrade.title = pendingForMe ? '' : 'Es liegt kein Handelsangebot für dich vor.';
   if (!pendingTrade) {
-    metroTradeStatus.textContent = currentPlayer ? 'Kein offenes Angebot.' : '';
+    metroTradeStatus.textContent = currentPlayer ? (canOffer ? 'Kein offenes Angebot.' : offerDisabledReason) : '';
   } else if (pendingForMe) {
     const offerer = runtimeState.players.find((player: any) => player.id === pendingTrade.fromPlayerId);
     metroTradeStatus.textContent = `Angebot von ${offerer?.name || 'Mitspieler'} wartet auf Antwort.`;
@@ -1080,8 +1223,10 @@ function formatMetroPhase(phase: string) {
   return labels[phase] || phase;
 }
 
-function setMetroActionState(button: HTMLElement, enabled: boolean) {
+function setMetroActionState(button: HTMLElement, enabled: boolean, disabledReason = '') {
   button.toggleAttribute('disabled', !enabled);
+  if (enabled || !disabledReason) button.removeAttribute('title');
+  else button.title = disabledReason;
 }
 
 // Event Listeners

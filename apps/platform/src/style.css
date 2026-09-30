@@ -851,6 +851,17 @@ button.danger {
   gap: 7px;
 }
 
+.metro-action-context {
+  min-height: 2.6em;
+  padding: 7px 9px;
+  border-left: 3px solid var(--mustard);
+  background: rgba(250, 246, 238, 0.72);
+  color: var(--teal-dark);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 .metro-action-grid button {
   min-height: 38px;
   padding: 7px 8px;
@@ -1785,6 +1796,29 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   line-height: 1.35;
+}
+
+.metro-log {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.metro-log-group {
+  padding-left: 8px;
+  border-left: 2px solid var(--sky);
+}
+
+.metro-log-group-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--teal-dark);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+}
+
+.metro-log-group-events {
+  display: grid;
+  gap: 4px;
 }
 
 @media (max-width: 900px) {

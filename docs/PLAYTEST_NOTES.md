@@ -20,26 +20,32 @@
 1. **Kaufen bleibt bei unzureichendem Guthaben aktiv**
    - **Reproduktion:** Mit weniger Geld als der Grundstückspreis auf einem freien Grundstück landen. Der Kaufen-Button bleibt aktiv, die Serveraktion wird mit „Nicht genug Taler zum Kauf“ abgewiesen.
    - **Auswirkung:** Die Oberfläche bietet eine ungültige Aktion an und wirkt nach dem Klick nicht reagierend.
+   - **Status (2026-09-30): Behoben.** Der Kaufen-Button nutzt die Engine-Validierung und bleibt bei zu wenig Guthaben deaktiviert; der Aktionshinweis nennt Kaufpreis und verfügbares Geld.
 
 ### Gering
 
 1. **Mehrere Tabs im selben Browser-Profil erscheinen als derselbe Spieler**
    - **Reproduktion:** Vier Tabs auf derselben Origin öffnen. Der lokal gespeicherte Session-Token wird geteilt; Reconnect remappt die Tabs auf denselben Host.
    - **Auswirkung:** Für echte separate Browser-Kontexte ist das erwartbar, aber für Nutzer, die mehrere Tabs zum Testen verwenden, ist die Identität verwirrend.
+   - **Status (2026-09-30): Behoben.** Der Session-Token liegt in `sessionStorage`: getrennte Tabs erhalten eigene Identitäten, Reloads desselben Tabs behalten den Token.
 
 ## UX-Probleme
 
 1. **Nächste Aktion ist nur indirekt erkennbar**
    - Der Status „Du bist am Zug“ und die aktivierten Buttons helfen, aber deaktivierte Aktionen erklären nicht, warum sie noch nicht möglich sind. Besonders Kaufen, Bauen, Handeln und Zugabschluss könnten einen kurzen Grund oder Kontext anzeigen.
+   - **Status (2026-09-30): Behoben.** Ein Live-Aktionshinweis beschreibt die nächste Entscheidung; deaktivierte Kauf-, Bau-, Zugabschluss- und Handelsaktionen erklären ihren Grund.
 
 2. **Das Stadtprotokoll ist kompakt, aber Ereignisse sind schwer zu gruppieren**
    - Würfelwurf, Landung, Kauf/Miete und Zugwechsel erscheinen als einzelne Zeilen. Bei Paschfolgen muss man die Reihenfolge aus mehreren Zeilen rekonstruieren.
+   - **Status (2026-09-30): Behoben.** Protokolleinträge werden pro Würfelzug zusammengefasst; Pasch-Zusatzwürfe bleiben in derselben Gruppe.
 
 3. **Spielerperspektive bei Warten ist ausreichend, aber nicht vollständig informativ**
    - „Warten auf Spieler X“ zeigt den aktiven Spieler, aber nicht dessen Feld, Aktion oder verbleibende Entscheidung.
+   - **Status (2026-09-30): Behoben.** Wartehinweise zeigen den aktiven Spieler, dessen Feld und die anstehende Entscheidung.
 
 4. **Karten- und Besitzänderungen sind sichtbar, aber nicht als Transaktion zusammengefasst**
    - Der Kartenbestand aktualisiert sich korrekt nach Käufen. Eine kurze zusammenhängende Meldung wie „Atomreaktor gekauft, 150 Taler bezahlt“ wäre leichter zu verfolgen als nur Log plus Spielerwert.
+   - **Status (2026-09-30): Behoben.** Kauf- und Mietereignisse erscheinen zusammen mit Landung und Würfelwurf in einer Zuggruppe; der Ereigniseintrag enthält Betrag und Grundstück.
 
 ## Feature-Vorschläge
 
