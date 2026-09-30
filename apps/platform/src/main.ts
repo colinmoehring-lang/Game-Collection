@@ -4,9 +4,10 @@ import { generateRoomCode } from '@metroville/game-sdk';
 import { METROVILLE_FIELDS, MetrovilleModule } from '@metroville/game-metroville';
 import { audio } from './audio.js';
 
-const BACKEND_URL = window.location.hostname === 'localhost'
+const DEFAULT_BACKEND_URL = window.location.hostname === 'localhost'
   ? 'ws://localhost:2567'
   : `ws://${window.location.hostname}:2567`;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL?.trim() || DEFAULT_BACKEND_URL;
 const BACKEND_HTTP_URL = BACKEND_URL.replace(/^ws:/, 'http:');
 
 const client = new Client(BACKEND_URL);

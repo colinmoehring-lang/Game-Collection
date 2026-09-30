@@ -23,6 +23,10 @@ corepack pnpm --filter @metroville/server dev
 corepack pnpm --filter @metroville/platform dev
 ```
 
+## Deployment
+
+Render-Setup mit GitHub-Verknüpfung: [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md). Der Repository-Root enthält den zugehörigen `render.yaml` Blueprint.
+
 ## Spiele
 
 - **MetroVille: City of Fortune:** Multiplayer-Brettspiel mit Grundstücken, Besitz, Mieten, Auktionen, Handel, Gebäuden, Hypotheken und Bots. Das Preset wird in der Lobby ausgewählt: Blitz, Standard oder Klassisch Light.

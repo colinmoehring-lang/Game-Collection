@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: metroville-game-server
+    runtime: node
+    plan: free
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @metroville/server build
+    startCommand: corepack pnpm --filter @metroville/server start
+    startCommand: corepack pnpm --filter @metroville/server start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+
+  - type: static
+    name: metroville-game-platform
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @metroville/platform build
+    staticPublishPath: ./apps/platform/dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: VITE_BACKEND_URL
+        value: wss://metroville-game-server.onrender.com
