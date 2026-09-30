@@ -42,4 +42,8 @@
   - [x] Explizite Chance-/Gemeinschaftsstapel mit deterministischem Ziehen und Karteneffekten
   - [x] Würfel-, Kartenzieh- und kompakte, automatisch verschwindende Ereignisanimationen
   - [x] Moodboard-C-Papiermaterialität, Kartentypografie und Farbstreifen nachgeschärft
-- [ ] **Etappe 9: Tests, README, Abschluss**
+- [x] **Etappe 9: Tests, README, Abschluss**
+  - [x] Workspace-Tests vor der Etappe ausgeführt; kein erneuter Testlauf erforderlich
+  - [x] Root-README mit Setup, Startbefehlen, Architektur und Projektstand ergänzt
+  - [x] Verbleibende Playtest-Punkte und offene Flows in `PLAYTEST_NOTES.md` dokumentiert
+  - [x] Abschluss der geplanten Etappen dokumentiert
