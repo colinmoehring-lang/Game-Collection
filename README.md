@@ -1,6 +1,6 @@
 # MetroVille Game Collection
 
-Eine browserbasierte Multiplayer-Spielesammlung in einem pnpm-/Turborepo-Monorepo. Der aktuelle Stand enthält MetroVille, Tic-Tac-Toe und Texas Hold’em. Die Plattform verwaltet Lobby und Spielansicht; ein Colyseus-Server synchronisiert Räume und autoritative Spielzustände.
+Eine browserbasierte Multiplayer-Spielesammlung in einem pnpm-/Turborepo-Monorepo. Der aktuelle Stand enthält MetroVille, Tic-Tac-Toe, Texas Hold’em und Five Card Draw. Die Plattform verwaltet Lobby und Spielansicht; ein Colyseus-Server synchronisiert Räume und autoritative Spielzustände.
 
 ## Schnellstart
 
@@ -28,6 +28,7 @@ corepack pnpm --filter @metroville/platform dev
 - **MetroVille: City of Fortune:** Multiplayer-Brettspiel mit Grundstücken, Besitz, Mieten, Auktionen, Handel, Gebäuden, Hypotheken und Bots. Das Preset wird in der Lobby ausgewählt: Blitz, Standard oder Klassisch Light.
 - **Tic-Tac-Toe:** Einfaches rundenbasiertes Multiplayer-Spiel.
 - **Texas Hold’em:** Multiplayer-Poker für 2 bis 8 Personen mit privaten Hole Cards, Blinds, No-Limit-Einsätzen und Showdown.
+- **Five Card Draw:** Poker für 2 bis 8 Personen mit fünf Karten, einer Tauschrunde und zwei Setzrunden.
 
 ## Entwicklung
 
@@ -57,7 +58,7 @@ node test-multiplayer-e2e.mjs
 - `apps/server/`: Colyseus-Server, Multiplayer-Räume und synchronisierter Room-State.
 - `packages/game-sdk/`: gemeinsame Spieltypen und Hilfsfunktionen.
 - `packages/games/metroville/`: MetroVille-Regel-Engine, Karten, Brett und Tests.
-- `packages/games/texasholdem/`: Texas-Hold’em-Regel-Engine und Tests.
+- `packages/games/texasholdem/`: Texas-Hold’em- und Five-Card-Draw-Regel-Engine mit Tests.
 - `packages/games/tictactoe/`: Tic-Tac-Toe-Spielmodul und Tests.
 - `docs/`: Konventionen, Fortschritt und aktuelle Playtest-Notizen.
 - `moodboards/`: Art-Direction-Referenzen.

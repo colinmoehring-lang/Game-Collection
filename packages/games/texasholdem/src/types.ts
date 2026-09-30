@@ -1,7 +1,8 @@
 import type { Player } from '@metroville/game-sdk';
 
-export type PokerStage = 'preflop' | 'flop' | 'turn' | 'river' | 'hand_over' | 'gameover';
-export type PokerActionType = 'FOLD' | 'CHECK' | 'CALL' | 'RAISE' | 'ALL_IN' | 'NEXT_HAND';
+export type PokerGameType = 'texasholdem' | 'fivecarddraw';
+export type PokerStage = 'preflop' | 'flop' | 'turn' | 'river' | 'draw_bet1' | 'draw' | 'draw_bet2' | 'hand_over' | 'gameover';
+export type PokerActionType = 'FOLD' | 'CHECK' | 'CALL' | 'RAISE' | 'ALL_IN' | 'DRAW' | 'NEXT_HAND';
 
 export interface PokerPlayer extends Player {
   chips: number;
@@ -12,9 +13,11 @@ export interface PokerPlayer extends Player {
   totalCommitted: number;
   actedThisRound: boolean;
   raiseLocked: boolean;
+  drewCards: boolean;
 }
 
 export interface PokerConfig {
+  gameType?: PokerGameType;
   startingChips?: number;
   smallBlind?: number;
   bigBlind?: number;
@@ -23,6 +26,7 @@ export interface PokerConfig {
 export interface PokerState {
   seed: string;
   randomIndex: number;
+  gameType: PokerGameType;
   players: PokerPlayer[];
   playerOrder: string[];
   currentTurnPlayerId: string;
@@ -43,6 +47,7 @@ export interface PokerState {
 
 export type PokerAction =
   | { type: 'FOLD' | 'CHECK' | 'CALL' | 'ALL_IN' | 'NEXT_HAND' }
+  | { type: 'DRAW'; indices: number[] }
   | { type: 'RAISE'; raiseTo: number };
 
 export interface EvaluatedHand {

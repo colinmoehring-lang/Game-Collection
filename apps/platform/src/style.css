@@ -1238,6 +1238,12 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   min-height: 74px;
 }
 
+.poker-community[hidden],
+.poker-actions[hidden],
+.poker-draw-actions[hidden] {
+  display: none;
+}
+
 .poker-card {
   position: relative;
   display: grid;
@@ -1278,6 +1284,27 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   font-family: 'Syne', sans-serif;
   font-size: 15px;
   font-weight: 800;
+}
+
+.poker-draw-card {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 68px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.poker-draw-card:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.poker-draw-card.is-selected .poker-card {
+  transform: translateY(-7px);
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
 }
 
 .poker-pot {
@@ -1378,6 +1405,26 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   font-size: 7px;
 }
 
+.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards {
+  gap: 1px;
+}
+
+.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card {
+  flex-basis: 17px;
+  width: 17px;
+  height: 25px;
+}
+
+.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card > strong {
+  font-size: 9px;
+}
+
+.poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card-corner {
+  top: 1px;
+  left: 2px;
+  font-size: 5px;
+}
+
 .poker-hand-panel,
 .poker-panel {
   border: 2px solid var(--charcoal);
@@ -1427,6 +1474,21 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   align-items: end;
   gap: 9px;
   padding-top: 12px;
+}
+
+.poker-draw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding-top: 12px;
+}
+
+.poker-draw-actions > span {
+  flex: 1 0 100%;
+  color: var(--teal-dark);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
 }
 
 .poker-raise-field {
@@ -1640,6 +1702,12 @@ body.colorblind-mode .metro-tile[data-owner]::after {
     height: 54px;
   }
 
+  .poker-draw-card {
+    flex-basis: 38px;
+    width: 38px;
+    height: 54px;
+  }
+
   .poker-card > strong {
     font-size: 20px;
   }
@@ -1670,6 +1738,16 @@ body.colorblind-mode .metro-tile[data-owner]::after {
 
   .poker-seat-cards .poker-card-corner {
     font-size: 6px;
+  }
+
+  .poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card {
+    flex-basis: 14px;
+    width: 14px;
+    height: 21px;
+  }
+
+  .poker-seats[data-game-type="fivecarddraw"] .poker-seat-cards .poker-card > strong {
+    font-size: 8px;
   }
 
   .poker-sidebar {

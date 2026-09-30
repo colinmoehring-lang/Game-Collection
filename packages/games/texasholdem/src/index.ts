@@ -10,8 +10,7 @@ import type {
 import { createRNG } from '@metroville/game-sdk';
 import type { EvaluatedHand, PokerAction, PokerConfig, PokerPlayer, PokerState } from './types.js';
 
-export type { EvaluatedHand, PokerAction, PokerConfig, PokerPlayer, PokerStage, PokerState } from './types.js';
-
+export type { EvaluatedHand, PokerAction, PokerConfig, PokerGameType, PokerPlayer, PokerStage, PokerState } from './types.js';
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const SUITS = ['S', 'H', 'D', 'C'];
 const RANK_VALUE: Record<string, number> = Object.fromEntries(RANKS.map((rank, index) => [rank, index + 2]));
@@ -28,6 +27,24 @@ export const TexasHoldemManifest: GameManifest = {
   maxPlayers: 8,
   estimatedDurationMinutes: [15, 60],
   variants: [{ id: 'standard', name: 'Texas Hold’em', description: 'No-Limit Texas Hold’em mit Small Blind 10 und Big Blind 20.' }],
+  settings: [
+    { id: 'startingChips', name: 'Startchips', type: 'number', default: 1000, min: 100, max: 10000, step: 100 },
+    { id: 'smallBlind', name: 'Small Blind', type: 'number', default: 10, min: 1, max: 500, step: 1 },
+    { id: 'bigBlind', name: 'Big Blind', type: 'number', default: 20, min: 2, max: 1000, step: 1 }
+  ]
+};
+
+export const FiveCardDrawManifest: GameManifest = {
+  id: 'five-card-draw',
+  name: 'Five Card Draw',
+  description: {
+    de: 'Fünf Karten, eine Tauschrunde und zwei Setzrunden bis zum Showdown.',
+    en: 'Five cards, one draw round, and two betting rounds before showdown.'
+  },
+  minPlayers: 2,
+  maxPlayers: 8,
+  estimatedDurationMinutes: [10, 35],
+  variants: [{ id: 'standard', name: 'Five Card Draw', description: 'No-Limit Five Card Draw mit einer Tauschrunde.' }],
   settings: [
     { id: 'startingChips', name: 'Startchips', type: 'number', default: 1000, min: 100, max: 10000, step: 100 },
     { id: 'smallBlind', name: 'Small Blind', type: 'number', default: 10, min: 1, max: 500, step: 1 },
@@ -217,10 +234,16 @@ function settlePot(state: PokerState, handName: string, scores: Map<string, numb
 function showDown(state: PokerState) {
   state.showdown = true;
   const eligible = playersInHand(state);
-  const scores = new Map(eligible.map(player => [player.id, evaluateBestHand([...player.hand, ...state.communityCards]).score]));
+  const scores = new Map(eligible.map(player => [
+    player.id,
+    (state.gameType === 'fivecarddraw' ? evaluateFive(player.hand) : evaluateBestHand([...player.hand, ...state.communityCards])).score
+  ]));
   const best = eligible.map(player => scores.get(player.id) || []).reduce((current, score) => compareScores(score, current) > 0 ? score : current, [] as number[]);
   const bestPlayer = eligible.find(player => compareScores(scores.get(player.id) || [], best) === 0);
-  settlePot(state, bestPlayer ? evaluateBestHand([...bestPlayer.hand, ...state.communityCards]).name : 'High Card', scores);
+  const bestHand = bestPlayer
+    ? state.gameType === 'fivecarddraw' ? evaluateFive(bestPlayer.hand) : evaluateBestHand([...bestPlayer.hand, ...state.communityCards])
+    : null;
+  settlePot(state, bestHand?.name || 'High Card', scores);
 }
 
 function finishByFolds(state: PokerState) {
@@ -234,10 +257,54 @@ function roundComplete(state: PokerState): boolean {
 }
 
 function runOutBoard(state: PokerState) {
-  if (state.communityCards.length < 5) dealCommunityCards(state, 5 - state.communityCards.length);
+  if (state.gameType === 'texasholdem' && state.communityCards.length < 5) {
+    dealCommunityCards(state, 5 - state.communityCards.length);
+  }
   showDown(state);
 }
 
+function finishDrawPhase(state: PokerState) {
+  state.players.forEach(player => {
+    player.currentBet = 0;
+    player.actedThisRound = false;
+    player.raiseLocked = false;
+  });
+  state.currentBet = 0;
+  state.minRaise = state.bigBlind;
+  state.stage = 'draw_bet2';
+  addLog(state, 'Zweite Setzrunde beginnt.');
+  if (ablePlayers(state).length <= 1) {
+    showDown(state);
+    return;
+  }
+  state.currentTurnPlayerId = playerAt(state, nextSeat(state, state.dealerIndex, player => !player.folded && !player.allIn && player.chips > 0))?.id || '';
+}
+
+function startDrawPhase(state: PokerState) {
+  state.stage = 'draw';
+  state.players.forEach(player => { player.drewCards = player.folded || player.allIn; });
+  addLog(state, 'Kartentausch: Wähle bis zu fünf Karten.');
+  state.currentTurnPlayerId = playerAt(state, nextSeat(state, state.dealerIndex, player => !player.folded && !player.allIn && player.chips > 0))?.id || '';
+  if (!state.currentTurnPlayerId) finishDrawPhase(state);
+}
+
+function reduceDraw(state: PokerState, action: Extract<PokerAction, { type: 'DRAW' }>): PokerState {
+  const next = cloneState(state);
+  const player = next.players.find(candidate => candidate.id === next.currentTurnPlayerId);
+  if (!player) return state;
+  const indices = [...action.indices].sort((left, right) => right - left);
+  indices.forEach(index => {
+    player.hand.splice(index, 1);
+    const replacement = next.deck.pop();
+    if (replacement) player.hand.push(replacement);
+  });
+  player.drewCards = true;
+  addLog(next, `${player.name} tauscht ${indices.length} ${indices.length === 1 ? 'Karte' : 'Karten'}.`);
+  const nextPlayer = playerAt(next, nextSeat(next, next.playerOrder.indexOf(player.id), candidate => !candidate.folded && !candidate.allIn && candidate.chips > 0 && !candidate.drewCards));
+  if (!nextPlayer) finishDrawPhase(next);
+  else next.currentTurnPlayerId = nextPlayer.id;
+  return next;
+}
 function advanceStreet(state: PokerState) {
   for (const player of state.players) {
     player.currentBet = 0;
@@ -247,6 +314,14 @@ function advanceStreet(state: PokerState) {
   state.currentBet = 0;
   state.minRaise = state.bigBlind;
 
+  if (state.stage === 'draw_bet1') {
+    startDrawPhase(state);
+    return;
+  }
+  if (state.stage === 'draw_bet2') {
+    showDown(state);
+    return;
+  }
   if (state.stage === 'preflop') {
     state.stage = 'flop';
     dealCommunityCards(state, 3);
@@ -281,7 +356,7 @@ function startHand(state: PokerState, rotateDealer: boolean) {
   state.minRaise = state.bigBlind;
   state.handWinner = null;
   state.showdown = false;
-  state.stage = 'preflop';
+  state.stage = state.gameType === 'fivecarddraw' ? 'draw_bet1' : 'preflop';
 
   state.players.forEach(player => {
     player.hand = [];
@@ -291,6 +366,7 @@ function startHand(state: PokerState, rotateDealer: boolean) {
     player.totalCommitted = 0;
     player.actedThisRound = false;
     player.raiseLocked = false;
+    player.drewCards = false;
   });
 
   const active = activePlayers(state);
@@ -299,7 +375,8 @@ function startHand(state: PokerState, rotateDealer: boolean) {
     state.currentTurnPlayerId = '';
     return;
   }
-  for (let round = 0; round < 2; round++) {
+  const holeCardCount = state.gameType === 'fivecarddraw' ? 5 : 2;
+  for (let round = 0; round < holeCardCount; round++) {
     for (let offset = 0; offset < state.playerOrder.length; offset++) {
       const player = playerAt(state, (state.dealerIndex + offset) % state.playerOrder.length);
       if (player && !player.folded) {
@@ -420,9 +497,19 @@ export class TexasHoldemBot implements BotStrategy<PokerState, PokerAction> {
     if (state.stage === 'hand_over') return { type: 'NEXT_HAND' };
     const player = state.players.find(candidate => candidate.id === playerId);
     if (!player) return { type: 'CHECK' };
+    if (state.gameType === 'fivecarddraw' && state.stage === 'draw') {
+      const ranks = new Map<number, number[]>();
+      player.hand.forEach((card, index) => ranks.set(cardValue(card), [...(ranks.get(cardValue(card)) || []), index]));
+      const pairs = [...ranks.entries()].filter(([, indices]) => indices.length > 1);
+      const keep = new Set(pairs.flatMap(([, indices]) => indices));
+      if (keep.size === 0) keep.add(ranks.get(Math.max(...ranks.keys()))?.[0] ?? 0);
+      return { type: 'DRAW', indices: player.hand.map((_, index) => index).filter(index => !keep.has(index)) };
+    }
     const callAmount = Math.max(0, state.currentBet - player.currentBet);
-    const handStrength = state.communityCards.length >= 3
-      ? evaluateBestHand([...player.hand, ...state.communityCards]).score[0]
+    const handStrength = state.gameType === 'fivecarddraw'
+      ? evaluateFive(player.hand).score[0]
+      : state.communityCards.length >= 3
+        ? evaluateBestHand([...player.hand, ...state.communityCards]).score[0]
       : (cardValue(player.hand[0]) === cardValue(player.hand[1]) ? 3 : 0)
         + (Math.max(cardValue(player.hand[0]), cardValue(player.hand[1])) >= 12 ? 2 : 0)
         + (player.hand[0]?.[1] === player.hand[1]?.[1] ? 1 : 0);
@@ -450,6 +537,7 @@ export const TexasHoldemModule: GameModule<PokerState, PokerAction, Partial<Poke
     const state: PokerState = {
       seed: seed || 'texasholdem-default',
       randomIndex: 0,
+      gameType: config.gameType || 'texasholdem',
       players: players.map(player => ({
         ...player,
         chips: Math.max(bigBlind, Math.floor(config.startingChips ?? 1000)),
@@ -459,14 +547,15 @@ export const TexasHoldemModule: GameModule<PokerState, PokerAction, Partial<Poke
         currentBet: 0,
         totalCommitted: 0,
         actedThisRound: false,
-        raiseLocked: false
+        raiseLocked: false,
+        drewCards: false
       })),
       playerOrder: players.map(player => player.id),
       currentTurnPlayerId: '',
       dealerIndex: 0,
       smallBlind,
       bigBlind,
-      stage: 'preflop',
+      stage: config.gameType === 'fivecarddraw' ? 'draw_bet1' : 'preflop',
       handNumber: 0,
       showdown: false,
       deck: [],
@@ -489,7 +578,17 @@ export const TexasHoldemModule: GameModule<PokerState, PokerAction, Partial<Poke
         ? { valid: true }
         : { valid: false, error: 'Keine neue Hand möglich' };
     }
-    if (state.stage !== 'preflop' && state.stage !== 'flop' && state.stage !== 'turn' && state.stage !== 'river') {
+    if (action.type === 'DRAW') {
+      if (state.gameType !== 'fivecarddraw' || state.stage !== 'draw') return { valid: false, error: 'Keine Tauschrunde aktiv' };
+      if (state.currentTurnPlayerId !== playerId) return { valid: false, error: 'Du bist nicht am Zug' };
+      if (player.folded || player.allIn || player.drewCards) return { valid: false, error: 'Du kannst keine Karten mehr tauschen' };
+      if (action.indices.length > 5 || new Set(action.indices).size !== action.indices.length
+        || action.indices.some(index => !Number.isInteger(index) || index < 0 || index >= player.hand.length)) {
+        return { valid: false, error: 'Ungültige Kartenauswahl' };
+      }
+      return { valid: true };
+    }
+    if (!['preflop', 'flop', 'turn', 'river', 'draw_bet1', 'draw_bet2'].includes(state.stage)) {
       return { valid: false, error: 'Diese Hand ist beendet' };
     }
     if (state.currentTurnPlayerId !== playerId) return { valid: false, error: 'Du bist nicht am Zug' };
@@ -509,6 +608,7 @@ export const TexasHoldemModule: GameModule<PokerState, PokerAction, Partial<Poke
   },
 
   applyAction(state, action): PokerState {
+    if (action.type === 'DRAW') return reduceDraw(state, action);
     if (action.type === 'NEXT_HAND') {
       const next = cloneState(state);
       startHand(next, true);
@@ -541,5 +641,13 @@ export const TexasHoldemModule: GameModule<PokerState, PokerAction, Partial<Poke
 
   createBot(difficulty = 'medium') {
     return new TexasHoldemBot(difficulty);
+  }
+};
+
+export const FiveCardDrawModule: GameModule<PokerState, PokerAction, Partial<PokerConfig>> = {
+  ...TexasHoldemModule,
+  manifest: FiveCardDrawManifest,
+  createInitialState(config, players, seed) {
+    return TexasHoldemModule.createInitialState({ ...config, gameType: 'fivecarddraw' }, players, seed);
   }
 };

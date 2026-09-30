@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Player } from '@metroville/game-sdk';
-import { evaluateBestHand, evaluateFive, TexasHoldemModule } from './index.js';
+import { evaluateBestHand, evaluateFive, FiveCardDrawModule, TexasHoldemModule } from './index.js';
 
 const players: Player[] = [
   { id: 'p1', name: 'Ada', color: '#C84B2F' },
@@ -107,5 +107,41 @@ describe('Texas Hold’em', () => {
     expect(evaluateFive(['AS', '2D', '3H', '4C', '5S']).score).toEqual([4, 5]);
     expect(evaluateBestHand(['AS', 'KD', 'QH', 'JC', 'TS', '2D', '3H']).name).toBe('Straight');
     expect(evaluateFive(['AS', 'AH', 'KD', 'KC', 'QS']).score).toEqual([2, 14, 13, 12]);
+  });
+
+  it('plays a complete Five Card Draw hand with a validated draw round', () => {
+    let state = FiveCardDrawModule.createInitialState({}, players, 'seed-draw');
+    expect(state.gameType).toBe('fivecarddraw');
+    expect(state.stage).toBe('draw_bet1');
+    expect(state.players.every(player => player.hand.length === 5)).toBe(true);
+    expect(state.communityCards).toHaveLength(0);
+
+    const act = (action: { type: 'CALL' | 'CHECK' } | { type: 'DRAW'; indices: number[] }) => {
+      const currentPlayer = state.players.find(player => player.id === state.currentTurnPlayerId)!;
+      expect(FiveCardDrawModule.validateAction(state, action, currentPlayer.id).valid).toBe(true);
+      state = FiveCardDrawModule.applyAction(state, action);
+    };
+
+    act({ type: 'CALL' });
+    act({ type: 'CHECK' });
+    expect(state.stage).toBe('draw');
+    const firstDrawer = state.players.find(player => player.id === state.currentTurnPlayerId)!;
+    const firstHand = [...firstDrawer.hand];
+    expect(FiveCardDrawModule.validateAction(state, { type: 'DRAW', indices: [1, 1] }, firstDrawer.id).valid).toBe(false);
+    act({ type: 'DRAW', indices: [] });
+    const secondDrawer = state.players.find(player => player.id === state.currentTurnPlayerId)!;
+    const secondHand = [...secondDrawer.hand];
+    act({ type: 'DRAW', indices: [0, 1] });
+    expect(state.stage).toBe('draw_bet2');
+    expect(state.players.every(player => player.hand.length === 5)).toBe(true);
+    expect(state.players.find(player => player.id === firstDrawer.id)?.hand).toEqual(firstHand);
+    expect(state.players.find(player => player.id === secondDrawer.id)?.hand.slice(0, 3)).toEqual(secondHand.slice(2));
+
+    act({ type: 'CHECK' });
+    act({ type: 'CHECK' });
+    expect(state.stage).toBe('hand_over');
+    expect(state.showdown).toBe(true);
+    expect(state.handWinner).not.toBeNull();
+    expect(state.players.reduce((sum, player) => sum + player.chips, 0)).toBe(2000);
   });
 });

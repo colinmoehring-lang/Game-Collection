@@ -6,11 +6,13 @@ import { generateRoomCode, type GameModule, type Player } from '@metroville/game
 import { MetrovilleModule } from '@metroville/game-metroville';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
 import { TexasHoldemModule } from '@metroville/game-texasholdem';
+import { FiveCardDrawModule } from '@metroville/game-texasholdem';
 
 const GAME_MODULES: Record<string, GameModule<any, any>> = {
   [MetrovilleModule.manifest.id]: MetrovilleModule,
   [TicTacToeModule.manifest.id]: TicTacToeModule,
-  [TexasHoldemModule.manifest.id]: TexasHoldemModule
+  [TexasHoldemModule.manifest.id]: TexasHoldemModule,
+  [FiveCardDrawModule.manifest.id]: FiveCardDrawModule
 };
 
 const COLOR_PALETTE = ['#C84B2F', '#1D7A72', '#D4930A', '#3B7FC4', '#8E44AD', '#27AE60'];
@@ -280,14 +282,14 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
         : this.runtimeGameState.currentTurnPlayerId;
       return;
     }
-    if (this.state.gameId === 'texasholdem') {
+    if (this.state.gameId === 'texasholdem' || this.state.gameId === 'five-card-draw') {
       this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
     }
   }
 
   private publishGameState() {
     if (!this.runtimeGameState || !this.gameModule) return;
-    if (this.state.gameId !== 'texasholdem') {
+    if (this.state.gameId !== 'texasholdem' && this.state.gameId !== 'five-card-draw') {
       this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
       return;
     }
@@ -345,7 +347,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       }
       return;
     }
-    if (this.state.gameId === 'texasholdem') {
+    if (this.state.gameId === 'texasholdem' || this.state.gameId === 'five-card-draw') {
       this.runtimeGameState.players = this.runtimeGameState.players.map((player: any) =>
         player.id === previousId ? { ...player, id: nextId } : player
       );
