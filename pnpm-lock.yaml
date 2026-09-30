@@ -248,6 +248,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.22.3
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.15
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -258,9 +261,6 @@ importers:
       '@types/node':
         specifier: ^22.13.9
         version: 22.20.4
-      tsx:
-        specifier: ^4.19.3
-        version: 4.23.15
       typescript:
         specifier: ^5.8.2
         version: 5.9.3

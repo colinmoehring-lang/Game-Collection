@@ -4,11 +4,12 @@ import { generateRoomCode } from '@metroville/game-sdk';
 import { METROVILLE_FIELDS, MetrovilleModule } from '@metroville/game-metroville';
 import { audio } from './audio.js';
 
-const DEFAULT_BACKEND_URL = window.location.hostname === 'localhost'
-  ? 'ws://localhost:2567'
-  : `ws://${window.location.hostname}:2567`;
+// VITE_BACKEND_URL kommt aus der Deploy-Umgebung (siehe render.yaml).
+// Lokal wird der Colyseus-Server auf demselben Host wie die Seite erwartet.
+const localBackendProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const DEFAULT_BACKEND_URL = `${localBackendProtocol}://${window.location.hostname}:2567`;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL?.trim() || DEFAULT_BACKEND_URL;
-const BACKEND_HTTP_URL = BACKEND_URL.replace(/^ws:/, 'http:');
+const BACKEND_HTTP_URL = BACKEND_URL.replace(/^wss?:/, 'http:');
 
 const client = new Client(BACKEND_URL);
 let currentRoom: Room<any> | null = null;
@@ -842,7 +843,7 @@ function renderTexasHoldem(roomState: any, publicState: any) {
   texasHoldemGame.querySelector('.poker-table-mark')!.textContent = isFiveCardDraw ? 'FIVE CARD DRAW' : 'TEXAS HOLD’EM';
   texasHoldemGame.querySelector('.poker-heading .panel-kicker')!.textContent = isFiveCardDraw ? 'FIVE CARD DRAW' : 'TEXAS HOLD’EM';
 
-  const privateView = latestPrivatePokerView?.revision === publicState.revision
+  const privateView = latestPrivatePokerView && latestPrivatePokerView.revision === publicState.revision
     ? latestPrivatePokerView.state
     : null;
   const playerId = currentRoom?.sessionId;

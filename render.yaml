@@ -5,7 +5,6 @@ services:
     plan: free
     buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @metroville/server build
     startCommand: corepack pnpm --filter @metroville/server start
-    startCommand: corepack pnpm --filter @metroville/server start
     healthCheckPath: /health
     autoDeploy: true
     envVars:
