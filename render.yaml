@@ -11,8 +11,9 @@ services:
       - key: NODE_VERSION
         value: 24.19.0
 
-  - type: static
+  - type: web
     name: metroville-game-platform
+    runtime: static
     buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @metroville/platform build
     staticPublishPath: ./apps/platform/dist
     autoDeploy: true

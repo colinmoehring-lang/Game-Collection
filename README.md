@@ -25,7 +25,7 @@ corepack pnpm --filter @metroville/platform dev
 
 ## Deployment
 
-Render-Setup mit GitHub-Verknüpfung: [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md). Der Repository-Root enthält den zugehörigen `render.yaml` Blueprint.
+Render-Setup mit GitHub-Verknüpfung: [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md). Der Repository-Root enthält den zugehörigen `render.yaml` Blueprint; die Syntax-Hinweise zu statischen Sites und zur Node-Version stehen dort im Abschnitt „Blueprint-Syntax“.
 
 ## Spiele
 

@@ -5,6 +5,15 @@ Das Repository enthält einen Render Blueprint in `render.yaml`. Er richtet zwei
 - `metroville-game-server`: Colyseus-WebSocket-Server mit Health-Endpunkt `/health`.
 - `metroville-game-platform`: statische Vite-Plattform.
 
+## Blueprint-Syntax
+
+Render validiert `render.yaml` gegen sein eigenes Schema und meldet Fehler direkt im Dashboard. Zwei Punkte sind dabei nicht offensichtlich:
+
+- Eine statische Site wird als `type: web` mit `runtime: static` beschrieben. Die Kurzform `type: static` wird abgelehnt mit `unknown type "static"`.
+- Eine statische Site darf kein `plan`-Feld enthalten; Render führt sie immer kostenlos aus.
+
+Beide Dienste setzen `NODE_VERSION` auf `24.19.0`, damit die Builds über `corepack` laufen. Ab Node.js 25 gehört Corepack nicht mehr zur Node-Distribution; eine ungepinnte oder zu hohe Version lässt `corepack pnpm install --frozen-lockfile` im Build scheitern.
+
 ## 1. Änderungen zu GitHub pushen
 
 Committe und pushe den gewünschten Stand in ein GitHub-Repository. Das Repository kann öffentlich oder privat sein; bei einem privaten Repository muss Render Zugriff darauf erhalten.
@@ -24,8 +33,12 @@ Der Blueprint verwendet `metroville-game-server` als Service-Namen. Die Plattfor
 
 Nach erfolgreichem Deployment:
 
-- Server prüfen: `https://<server-domain>/health` muss JSON mit `"status":"ok"` liefern.
-- Plattform öffnen: `https://<static-site-domain>.onrender.com`.
+```powershell
+Invoke-RestMethod https://metroville-game-server.onrender.com/health
+```
+
+- Die Antwort muss JSON mit `"status":"ok"` enthalten. Auf dem kostenlosen Plan weckt der erste Aufruf den schlafenden Dienst; die Antwort kann deshalb verzögert kommen oder einmalig fehlschlagen – dann einfach wiederholen.
+- Plattform öffnen: `https://metroville-game-platform.onrender.com`.
 - Von einem zweiten Gerät oder einem anderen Netzwerk einen Raumlink aus der Lobby öffnen und dem Raum beitreten.
 - Optional die komplette Kette gegen die veröffentlichte Plattform prüfen: `E2E_PLATFORM_URL=https://<static-site-domain>` setzen und `node test-multiplayer-e2e.mjs` ausführen. Unter Windows PowerShell: `$env:E2E_PLATFORM_URL='https://<static-site-domain>'; node test-multiplayer-e2e.mjs`. Der Test erwartet Tic-Tac-Toe mit genau zwei Spielern; die Plattform-Route `/?room=<code>` muss erreichbar sein.
 

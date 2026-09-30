@@ -53,3 +53,5 @@
   - [x] Typen für `import.meta.env` ergänzt, damit der Plattform-Typecheck fehlerfrei bleibt
   - [x] `pnpm-lock.yaml` mit `apps/server/package.json` synchronisiert, damit `corepack pnpm install --frozen-lockfile` im Render-Build durchläuft
   - [x] Multiplayer-E2E-Smoke-Test auf zwei Sitzungen umgestellt (Tic-Tac-Toe erlaubt genau zwei Spieler) und um Sieg-Prüfungen erweitert
+  - [x] Statische Plattform im Blueprint auf `type: web` mit `runtime: static` korrigiert; `type: static` wird von Renders Schema abgelehnt
+  - [x] `render.yaml` gegen das offizielle Render-Schema (`https://render.com/schema/render.yaml.json`) geprüft
