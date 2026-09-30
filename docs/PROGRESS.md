@@ -47,3 +47,9 @@
   - [x] Root-README mit Setup, Startbefehlen, Architektur und Projektstand ergänzt
   - [x] Verbleibende Playtest-Punkte und offene Flows in `PLAYTEST_NOTES.md` dokumentiert
   - [x] Abschluss der geplanten Etappen dokumentiert
+- [x] **Nach Etappe 9: Deployment auf Render**
+  - [x] Blueprint `render.yaml` mit Colyseus-Web-Service (`/health`) und statischer Vite-Plattform
+  - [x] Backend-Adresse zur Build-Zeit über `VITE_BACKEND_URL` gesetzt; ohne Variable leitet die Plattform `ws://` oder `wss://` aus dem Seitenprotokoll ab
+  - [x] Typen für `import.meta.env` ergänzt, damit der Plattform-Typecheck fehlerfrei bleibt
+  - [x] `pnpm-lock.yaml` mit `apps/server/package.json` synchronisiert, damit `corepack pnpm install --frozen-lockfile` im Render-Build durchläuft
+  - [x] Multiplayer-E2E-Smoke-Test auf zwei Sitzungen umgestellt (Tic-Tac-Toe erlaubt genau zwei Spieler) und um Sieg-Prüfungen erweitert

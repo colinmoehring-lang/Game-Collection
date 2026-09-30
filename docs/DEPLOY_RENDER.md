@@ -27,6 +27,7 @@ Nach erfolgreichem Deployment:
 - Server prüfen: `https://<server-domain>/health` muss JSON mit `"status":"ok"` liefern.
 - Plattform öffnen: `https://<static-site-domain>.onrender.com`.
 - Von einem zweiten Gerät oder einem anderen Netzwerk einen Raumlink aus der Lobby öffnen und dem Raum beitreten.
+- Optional die komplette Kette gegen die veröffentlichte Plattform prüfen: `E2E_PLATFORM_URL=https://<static-site-domain>` setzen und `node test-multiplayer-e2e.mjs` ausführen. Unter Windows PowerShell: `$env:E2E_PLATFORM_URL='https://<static-site-domain>'; node test-multiplayer-e2e.mjs`. Der Test erwartet Tic-Tac-Toe mit genau zwei Spielern; die Plattform-Route `/?room=<code>` muss erreichbar sein.
 
 Die geteilten Raumlinks verwenden auf der veröffentlichten Plattform deren öffentliche Domain und den Raumcode, nicht die lokale WLAN-IP.
 

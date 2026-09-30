@@ -50,11 +50,13 @@ corepack pnpm --filter @metroville/game-metroville test
 corepack pnpm --filter @metroville/game-metroville build
 ```
 
-Der Multiplayer-E2E-Smoke-Test für Tic-Tac-Toe benötigt laufende Plattform und Server sowie einen installierten Playwright-Browser:
+Der Multiplayer-E2E-Smoke-Test für Tic-Tac-Toe prüft die Kette Raum erstellen → Beitritt über Raumlink → Bereit → Start → Zug-Synchronisation → Sieg. Er benötigt laufende Plattform und Server sowie einen installierten Playwright-Browser:
 
 ```powershell
 node test-multiplayer-e2e.mjs
 ```
+
+Der Test nutzt zwei Browser-Sitzungen, weil Tic-Tac-Toe genau zwei Spieler zulässt. `E2E_PLATFORM_URL` richtet ihn auf eine andere Plattform-Adresse aus (etwa die deployte Render-URL), `PLAYWRIGHT_CHANNEL=chrome` verwendet den lokal installierten Chrome statt des mitgelieferten Chromium.
 
 ## Projektstruktur
 
