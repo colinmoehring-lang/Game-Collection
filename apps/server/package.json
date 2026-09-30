@@ -14,6 +14,7 @@
     "@metroville/game-metroville": "workspace:*",
     "@metroville/game-sdk": "workspace:*",
     "@metroville/game-tictactoe": "workspace:*",
+    "@metroville/game-texasholdem": "workspace:*",
     "colyseus": "0.15.57",
     "cors": "^2.8.5",
     "express": "^4.21.2"

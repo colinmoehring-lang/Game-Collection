@@ -5,10 +5,12 @@ import { GameRoomState, PlayerSchema } from './schema/GameRoomState.js';
 import { generateRoomCode, type GameModule, type Player } from '@metroville/game-sdk';
 import { MetrovilleModule } from '@metroville/game-metroville';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
+import { TexasHoldemModule } from '@metroville/game-texasholdem';
 
 const GAME_MODULES: Record<string, GameModule<any, any>> = {
   [MetrovilleModule.manifest.id]: MetrovilleModule,
-  [TicTacToeModule.manifest.id]: TicTacToeModule
+  [TicTacToeModule.manifest.id]: TicTacToeModule,
+  [TexasHoldemModule.manifest.id]: TexasHoldemModule
 };
 
 const COLOR_PALETTE = ['#C84B2F', '#1D7A72', '#D4930A', '#3B7FC4', '#8E44AD', '#27AE60'];
@@ -18,6 +20,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
   private gameModule: GameModule<any, any> | null = null;
   private runtimeGameState: any = null;
   private botInstances: Map<string, any> = new Map();
+  private gameStateRevision = 0;
 
   onCreate(options: any) {
     this.setState(new GameRoomState());
@@ -51,6 +54,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     this.onMessage('ADD_BOT', (client) => {
       const host = this.state.players.get(client.sessionId);
       if (!host || !host.isHost || this.state.status !== 'lobby') return;
+      if (this.state.players.size >= (this.gameModule?.manifest.maxPlayers || this.maxClients)) return;
 
       const botId = 'bot-' + Math.random().toString(36).substring(2, 7);
       const botPlayer = new PlayerSchema();
@@ -93,6 +97,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       const host = this.state.players.get(client.sessionId);
       if (!host || !host.isHost) return;
       if (this.state.players.size < (this.gameModule?.manifest.minPlayers || 2)) return;
+      if (this.state.players.size > (this.gameModule?.manifest.maxPlayers || this.maxClients)) return;
 
       this.startGame();
     });
@@ -136,6 +141,12 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       this.state.players.set(client.sessionId, existingPlayer);
       this.botInstances.delete(previousSessionId || client.sessionId);
       this.syncTurnPlayerId();
+      this.publishGameState();
+      return;
+    }
+
+    if (this.state.status !== 'lobby' || this.state.players.size >= (this.gameModule?.manifest.maxPlayers || this.maxClients)) {
+      client.leave();
       return;
     }
 
@@ -206,7 +217,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     const config = this.state.gameId === 'metroville' ? { preset: this.state.gamePreset } : {};
     this.runtimeGameState = this.gameModule.createInitialState(config, playersArray, this.state.seed);
     this.state.status = 'playing';
-    this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
+    this.publishGameState();
 
     this.syncTurnPlayerId();
 
@@ -223,16 +234,17 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     }
 
     this.runtimeGameState = this.gameModule.applyAction(this.runtimeGameState, action);
-    this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
 
     if (this.gameModule.isGameOver(this.runtimeGameState)) {
       this.state.status = 'gameover';
       const result = this.gameModule.computeResult(this.runtimeGameState);
       this.state.winnerId = result.winnerId || '';
       this.state.winReason = result.reason || '';
+      this.publishGameState();
       return;
     }
 
+    this.publishGameState();
     this.syncTurnPlayerId();
 
     this.triggerBotTurnIfNeeded();
@@ -266,6 +278,41 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       this.state.currentTurnPlayerId = auction
         ? auction.activePlayerIds[auction.currentBidderIndex] || ''
         : this.runtimeGameState.currentTurnPlayerId;
+      return;
+    }
+    if (this.state.gameId === 'texasholdem') {
+      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
+    }
+  }
+
+  private publishGameState() {
+    if (!this.runtimeGameState || !this.gameModule) return;
+    if (this.state.gameId !== 'texasholdem') {
+      this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
+      return;
+    }
+
+    const revision = ++this.gameStateRevision;
+    const publicState = {
+      ...this.runtimeGameState,
+      revision,
+      seed: '',
+      randomIndex: 0,
+      deck: [],
+      players: this.runtimeGameState.players.map((player: any) => ({
+        ...player,
+        hand: this.runtimeGameState.showdown
+          ? [...player.hand]
+          : []
+      }))
+    };
+    this.state.gameStateJson = JSON.stringify(publicState);
+
+    for (const client of this.clients) {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) continue;
+      const privateView = this.gameModule.getPlayerView(this.runtimeGameState, player.id);
+      client.send('PRIVATE_GAME_VIEW', JSON.stringify({ revision, state: privateView }));
     }
   }
 
@@ -295,6 +342,17 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       if (this.runtimeGameState.pendingTrade) {
         if (this.runtimeGameState.pendingTrade.fromPlayerId === previousId) this.runtimeGameState.pendingTrade.fromPlayerId = nextId;
         if (this.runtimeGameState.pendingTrade.toPlayerId === previousId) this.runtimeGameState.pendingTrade.toPlayerId = nextId;
+      }
+      return;
+    }
+    if (this.state.gameId === 'texasholdem') {
+      this.runtimeGameState.players = this.runtimeGameState.players.map((player: any) =>
+        player.id === previousId ? { ...player, id: nextId } : player
+      );
+      this.runtimeGameState.playerOrder = this.runtimeGameState.playerOrder.map((id: string) => id === previousId ? nextId : id);
+      if (this.runtimeGameState.currentTurnPlayerId === previousId) this.runtimeGameState.currentTurnPlayerId = nextId;
+      if (this.runtimeGameState.handWinner) {
+        this.runtimeGameState.handWinner.playerIds = this.runtimeGameState.handWinner.playerIds.map((id: string) => id === previousId ? nextId : id);
       }
     }
   }

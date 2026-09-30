@@ -187,6 +187,9 @@ importers:
       '@metroville/game-sdk':
         specifier: workspace:*
         version: link:../../packages/game-sdk
+      '@metroville/game-texasholdem':
+        specifier: workspace:*
+        version: link:../../packages/games/texasholdem
       '@metroville/game-tictactoe':
         specifier: workspace:*
         version: link:../../packages/games/tictactoe
@@ -230,6 +233,9 @@ importers:
       '@metroville/game-sdk':
         specifier: workspace:*
         version: link:../../packages/game-sdk
+      '@metroville/game-texasholdem':
+        specifier: workspace:*
+        version: link:../../packages/games/texasholdem
       '@metroville/game-tictactoe':
         specifier: workspace:*
         version: link:../../packages/games/tictactoe
@@ -269,6 +275,19 @@ importers:
         version: 3.2.7(@types/node@22.20.4)(tsx@4.23.15)
 
   packages/games/metroville:
+    dependencies:
+      '@metroville/game-sdk':
+        specifier: workspace:*
+        version: link:../../game-sdk
+    devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@22.20.4)(tsx@4.23.15)
+
+  packages/games/texasholdem:
     dependencies:
       '@metroville/game-sdk':
         specifier: workspace:*

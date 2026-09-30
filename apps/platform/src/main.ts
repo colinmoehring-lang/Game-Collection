@@ -45,6 +45,26 @@ const gameStatusBar = document.getElementById('game-status-bar')!;
 const gameTitleHeader = document.getElementById('game-title-header')!;
 const tictactoeGame = document.getElementById('tictactoe-game')!;
 const metrovilleGame = document.getElementById('metroville-game')!;
+const texasHoldemGame = document.getElementById('texasholdem-game')!;
+const pokerCommunity = document.getElementById('poker-community')!;
+const pokerSeats = document.getElementById('poker-seats')!;
+const pokerHoleCards = document.getElementById('poker-hole-cards')!;
+const pokerCardsToggle = document.getElementById('poker-cards-toggle')!;
+const pokerHandNumber = document.getElementById('poker-hand-number')!;
+const pokerStageLabel = document.getElementById('poker-stage-label')!;
+const pokerBlinds = document.getElementById('poker-blinds')!;
+const pokerPot = document.getElementById('poker-pot')!;
+const pokerTurnNote = document.getElementById('poker-turn-note')!;
+const pokerPlayerList = document.getElementById('poker-player-list')!;
+const pokerResult = document.getElementById('poker-result')!;
+const pokerLog = document.getElementById('poker-log')!;
+const pokerRaiseTo = document.getElementById('poker-raise-to') as HTMLInputElement;
+const pokerFold = document.getElementById('poker-fold')!;
+const pokerCheck = document.getElementById('poker-check')!;
+const pokerCall = document.getElementById('poker-call')!;
+const pokerRaise = document.getElementById('poker-raise')!;
+const pokerAllIn = document.getElementById('poker-all-in')!;
+const pokerNextHand = document.getElementById('poker-next-hand')!;
 const metroEventToast = document.getElementById('metro-event-toast')!;
 const multiBoard = document.getElementById('multi-board')!;
 const metroBoard = document.getElementById('metro-board')!;
@@ -95,6 +115,8 @@ const metroActionPass = document.getElementById('metro-action-pass')!;
 let selectedPropertyIndex: number | null = null;
 let latestMetroRoomState: any = null;
 let latestMetroRuntimeState: any = null;
+let latestPrivatePokerView: { revision: number; state: any } | null = null;
+let pokerCardsHidden = localStorage.getItem('texasholdem_cards_hidden') === 'true';
 let previousMetroRuntimeState: any = null;
 let previousTicTacToeMoveCount = 0;
 let eventToastTimer: number | undefined;
@@ -153,6 +175,7 @@ function getPlayerName(): string {
 
 async function joinRoom(roomCode: string, isCreate: boolean = false) {
   try {
+    latestPrivatePokerView = null;
     connIndicator.textContent = '● Verbinde...';
     connIndicator.style.color = 'var(--mustard)';
 
@@ -196,11 +219,23 @@ function setupRoomListeners(room: Room<any>) {
     }
   });
 
+  room.onMessage('PRIVATE_GAME_VIEW', (message: string) => {
+    try {
+      latestPrivatePokerView = JSON.parse(message);
+      if (currentRoom === room && room.state.gameId === 'texasholdem' && room.state.status !== 'lobby') {
+        renderGame(room.state);
+      }
+    } catch {
+      latestPrivatePokerView = null;
+    }
+  });
+
   room.onLeave(() => {
     connIndicator.textContent = '● Getrennt';
     connIndicator.style.color = 'var(--warm-grey)';
     currentRoom = null;
     previousMetroRuntimeState = null;
+    latestPrivatePokerView = null;
     previousTicTacToeMoveCount = 0;
     lastCardKey = '';
     lastMetroEventKey = '';
@@ -323,6 +358,12 @@ function renderGame(state: any) {
     return;
   }
 
+  if (state.gameId === 'texasholdem') {
+    renderTexasHoldem(state, runtimeState);
+    return;
+  }
+
+  texasHoldemGame.hidden = true;
   if (state.gameId === 'metroville') {
     renderMetroville(state, runtimeState);
     return;
@@ -375,6 +416,7 @@ function renderGame(state: any) {
 
 function renderMetroville(roomState: any, runtimeState: any) {
   tictactoeGame.hidden = true;
+  texasHoldemGame.hidden = true;
   metrovilleGame.hidden = false;
   latestMetroRoomState = roomState;
   latestMetroRuntimeState = runtimeState;
@@ -527,6 +569,150 @@ function renderMetroville(roomState: any, runtimeState: any) {
   setMetroActionState(metroActionSell, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.houses > 0));
   setMetroActionState(metroActionMortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && !selectedProperty.isMortgaged));
   setMetroActionState(metroActionUnmortgage, canAct && Boolean(selectedProperty?.ownerId === mySessionId && selectedProperty.isMortgaged));
+}
+
+function createPokerCard(card: string | undefined, concealed = false) {
+  const element = document.createElement('span');
+  element.className = `poker-card${concealed ? ' is-hidden-card' : ''}`;
+  if (concealed || !card) {
+    element.textContent = 'M';
+    element.setAttribute('aria-label', 'Verdeckte Karte');
+    return element;
+  }
+  const rank = card.slice(0, -1);
+  const suit = card.slice(-1);
+  const rankLabel = rank === 'T' ? '10' : rank;
+  const suitGlyph: Record<string, string> = { S: '♠', H: '♥', D: '♦', C: '♣' };
+  const suitName: Record<string, string> = { S: 'Pik', H: 'Herz', D: 'Karo', C: 'Kreuz' };
+  const rankName: Record<string, string> = { J: 'Bube', Q: 'Dame', K: 'König', A: 'Ass' };
+  element.classList.toggle('is-red-card', suit === 'H' || suit === 'D');
+  const corner = document.createElement('span');
+  corner.className = 'poker-card-corner';
+  corner.textContent = rankLabel;
+  const center = document.createElement('strong');
+  center.textContent = suitGlyph[suit] || '?';
+  element.append(corner, center);
+  element.setAttribute('aria-label', `${rankName[rank] || rankLabel} ${suitName[suit] || 'Karte'}`);
+  return element;
+}
+
+function renderTexasHoldem(roomState: any, publicState: any) {
+  tictactoeGame.hidden = true;
+  metrovilleGame.hidden = true;
+  texasHoldemGame.hidden = false;
+  gameTitleHeader.textContent = "Texas Hold’em";
+
+  const privateView = latestPrivatePokerView?.revision === publicState.revision
+    ? latestPrivatePokerView.state
+    : null;
+  const playerId = currentRoom?.sessionId;
+  const privatePlayer = privateView?.players?.find((player: any) => player.id === playerId);
+  const players = publicState.players.map((player: any) => {
+    const privatePlayerState = privateView?.players?.find((candidate: any) => candidate.id === player.id);
+    return privatePlayerState ? { ...player, hand: privatePlayerState.hand } : player;
+  });
+  const currentPlayer = players.find((player: any) => player.id === playerId);
+  const turnPlayer = players.find((player: any) => player.id === roomState.currentTurnPlayerId);
+  const isMyTurn = roomState.status === 'playing' && roomState.currentTurnPlayerId === playerId;
+  const callAmount = currentPlayer ? Math.max(0, publicState.currentBet - currentPlayer.currentBet) : 0;
+  const minRaiseTo = publicState.currentBet + publicState.minRaise;
+  const maxRaiseTo = currentPlayer ? currentPlayer.currentBet + currentPlayer.chips : 0;
+  const stageNames: Record<string, string> = {
+    preflop: 'Preflop',
+    flop: 'Flop',
+    turn: 'Turn',
+    river: 'River',
+    hand_over: 'Hand beendet',
+    gameover: 'Spiel beendet'
+  };
+
+  gameStatusBar.textContent = roomState.status === 'gameover'
+    ? roomState.winReason || 'Das Spiel ist beendet.'
+    : isMyTurn
+      ? 'Du bist am Zug.'
+      : `Warten auf ${turnPlayer?.name || 'den nächsten Spieler'}.`;
+  pokerHandNumber.textContent = `Hand ${publicState.handNumber}`;
+  pokerStageLabel.textContent = stageNames[publicState.stage] || publicState.stage;
+  pokerBlinds.textContent = `${publicState.smallBlind} / ${publicState.bigBlind}`;
+  pokerPot.textContent = String(publicState.pot);
+  pokerTurnNote.textContent = isMyTurn
+    ? callAmount > 0 ? `Noch ${callAmount} Chips zum Mitgehen.` : 'Du kannst checken oder erhöhen.'
+    : `Am Zug: ${turnPlayer?.name || 'Warten'}`;
+  pokerCardsToggle.textContent = pokerCardsHidden ? 'Karten anzeigen' : 'Karten verstecken';
+  pokerCardsToggle.setAttribute('aria-pressed', String(pokerCardsHidden));
+
+  pokerCommunity.replaceChildren();
+  for (let index = 0; index < 5; index++) {
+    const card = publicState.communityCards[index];
+    pokerCommunity.appendChild(card ? createPokerCard(card) : createPokerCard(undefined, true));
+  }
+
+  pokerHoleCards.replaceChildren();
+  (privatePlayer?.hand || []).forEach((card: string) => pokerHoleCards.appendChild(createPokerCard(card, pokerCardsHidden)));
+  if (!privatePlayer?.hand?.length) {
+    pokerHoleCards.append(createPokerCard(undefined, true), createPokerCard(undefined, true));
+  }
+
+  pokerSeats.replaceChildren();
+  const seatPositions = [
+    { left: 50, top: 91 }, { left: 15, top: 76 }, { left: 8, top: 48 }, { left: 19, top: 18 },
+    { left: 50, top: 9 }, { left: 81, top: 18 }, { left: 92, top: 48 }, { left: 85, top: 76 }
+  ];
+  players.forEach((player: any, index: number) => {
+    const seat = document.createElement('div');
+    seat.className = `poker-seat${player.id === roomState.currentTurnPlayerId ? ' is-turn' : ''}${player.id === playerId ? ' is-self' : ''}${player.folded ? ' is-folded' : ''}${player.allIn ? ' is-all-in' : ''}`;
+    const position = seatPositions[index % seatPositions.length];
+    seat.style.left = `${position.left}%`;
+    seat.style.top = `${position.top}%`;
+    const name = document.createElement('strong');
+    name.textContent = player.name;
+    const chips = document.createElement('span');
+    chips.textContent = `${player.chips} Chips`;
+    const bet = document.createElement('small');
+    bet.textContent = player.folded ? 'PASST' : player.allIn ? 'ALL-IN' : player.currentBet > 0 ? `Einsatz ${player.currentBet}` : 'Am Tisch';
+    const cards = document.createElement('span');
+    cards.className = 'poker-seat-cards';
+    const hand = player.hand?.length ? player.hand : [null, null];
+    hand.slice(0, 2).forEach((card: string | null) => cards.appendChild(createPokerCard(card || undefined, !card || (player.id === playerId && pokerCardsHidden))));
+    seat.append(name, chips, bet, cards);
+    pokerSeats.appendChild(seat);
+  });
+
+  pokerPlayerList.replaceChildren();
+  players.forEach((player: any) => {
+    const row = document.createElement('div');
+    row.className = `poker-player-row${player.id === roomState.currentTurnPlayerId ? ' is-turn' : ''}`;
+    const name = document.createElement('strong');
+    name.textContent = player.name;
+    const stack = document.createElement('span');
+    stack.textContent = `${player.chips} Chips`;
+    row.append(name, stack);
+    pokerPlayerList.appendChild(row);
+  });
+
+  pokerResult.textContent = publicState.handWinner
+    ? `${publicState.handWinner.names.join(', ')} · ${publicState.handWinner.handName} · ${publicState.handWinner.amount} Chips`
+    : 'Die Karten werden gegeben.';
+  pokerLog.replaceChildren();
+  [...publicState.log].reverse().forEach((entry: string) => {
+    const line = document.createElement('p');
+    line.textContent = entry;
+    pokerLog.appendChild(line);
+  });
+
+  const canAct = isMyTurn && Boolean(currentPlayer) && !currentPlayer.folded && !currentPlayer.allIn;
+  setMetroActionState(pokerFold, canAct);
+  setMetroActionState(pokerCheck, canAct && callAmount === 0);
+  setMetroActionState(pokerCall, canAct && callAmount > 0);
+  setMetroActionState(pokerAllIn, canAct && currentPlayer.chips > 0);
+  pokerRaiseTo.min = String(minRaiseTo);
+  pokerRaiseTo.max = String(maxRaiseTo);
+  if (!pokerRaiseTo.value || Number(pokerRaiseTo.value) < minRaiseTo || Number(pokerRaiseTo.value) > maxRaiseTo) {
+    pokerRaiseTo.value = String(Math.min(maxRaiseTo, minRaiseTo));
+  }
+  setMetroActionState(pokerRaise, canAct && !currentPlayer.raiseLocked && maxRaiseTo >= minRaiseTo);
+  pokerNextHand.hidden = publicState.stage !== 'hand_over';
+  setMetroActionState(pokerNextHand, publicState.stage === 'hand_over' && Boolean(currentPlayer?.chips));
 }
 
 function selectMetroProperty(propertyIndex: number) {
@@ -874,6 +1060,17 @@ metroActionBid.addEventListener('click', () => {
   sendMetroAction({ type: 'BID_AUCTION', bidAmount: Number(metroAuctionBid.value) });
 });
 metroActionPass.addEventListener('click', () => sendMetroAction({ type: 'PASS_AUCTION' }));
+pokerFold.addEventListener('click', () => sendMetroAction({ type: 'FOLD' }));
+pokerCheck.addEventListener('click', () => sendMetroAction({ type: 'CHECK' }));
+pokerCall.addEventListener('click', () => sendMetroAction({ type: 'CALL' }));
+pokerRaise.addEventListener('click', () => sendMetroAction({ type: 'RAISE', raiseTo: Number(pokerRaiseTo.value) }));
+pokerAllIn.addEventListener('click', () => sendMetroAction({ type: 'ALL_IN' }));
+pokerNextHand.addEventListener('click', () => sendMetroAction({ type: 'NEXT_HAND' }));
+pokerCardsToggle.addEventListener('click', () => {
+  pokerCardsHidden = !pokerCardsHidden;
+  localStorage.setItem('texasholdem_cards_hidden', String(pokerCardsHidden));
+  if (currentRoom) renderGame(currentRoom.state);
+});
 metroPropertyClose.addEventListener('click', closePropertyOverlay);
 metroPropertyOverlay.addEventListener('click', (event) => {
   if (event.target === metroPropertyOverlay) closePropertyOverlay();

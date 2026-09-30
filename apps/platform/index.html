@@ -42,6 +42,7 @@
           <select id="game-select">
             <option value="metroville">MetroVille: City of Fortune</option>
             <option value="tictactoe">Tic-Tac-Toe</option>
+            <option value="texasholdem">Texas Hold’em</option>
           </select>
         </div>
 
@@ -198,6 +199,73 @@
                   <button class="secondary" id="metro-action-pass">Passen</button>
                 </div>
               </div>
+            </aside>
+          </div>
+        </div>
+
+        <div id="texasholdem-game" class="game-surface poker-game" hidden>
+          <div class="poker-heading">
+            <div>
+              <span class="panel-kicker">TEXAS HOLD’EM</span>
+              <h2>Am Tisch</h2>
+            </div>
+            <div class="poker-hand-meta">
+              <span id="poker-hand-number">Hand 1</span>
+              <span id="poker-stage-label">Preflop</span>
+              <span>Blinds <strong id="poker-blinds">10 / 20</strong></span>
+            </div>
+          </div>
+
+          <div class="poker-layout">
+            <div class="poker-main-column">
+              <section class="poker-table" aria-label="Poker-Tisch">
+                <div class="poker-table-inner">
+                  <span class="poker-table-mark">METROVILLE SOCIAL CLUB</span>
+                  <div class="poker-community" id="poker-community" aria-label="Gemeinschaftskarten"></div>
+                  <div class="poker-pot"><span>Pot</span><strong id="poker-pot">0</strong><span>Chips</span></div>
+                </div>
+                <div class="poker-seats" id="poker-seats"></div>
+              </section>
+
+              <section class="poker-hand-panel" aria-label="Deine Karten und Aktionen">
+                <div class="poker-hole-row">
+                  <div>
+                    <div class="poker-hole-title">
+                      <span class="panel-kicker">DEINE HAND</span>
+                      <button class="secondary" id="poker-cards-toggle" type="button" aria-pressed="false">Karten verstecken</button>
+                    </div>
+                    <div class="poker-hole-cards" id="poker-hole-cards"></div>
+                  </div>
+                  <div class="poker-turn-note" id="poker-turn-note" role="status" aria-live="polite"></div>
+                </div>
+                <div class="poker-actions">
+                  <button class="danger" id="poker-fold" type="button">Passen</button>
+                  <button class="secondary" id="poker-check" type="button">Check</button>
+                  <button class="accent" id="poker-call" type="button">Mitgehen</button>
+                  <label class="poker-raise-field" for="poker-raise-to">
+                    Erhöhen auf
+                    <input id="poker-raise-to" type="number" min="20" step="1" value="40" />
+                  </label>
+                  <button class="primary" id="poker-raise" type="button">Erhöhen</button>
+                  <button class="primary" id="poker-all-in" type="button">All-in</button>
+                  <button class="accent" id="poker-next-hand" type="button" hidden>Nächste Hand</button>
+                </div>
+              </section>
+            </div>
+
+            <aside class="poker-sidebar" aria-label="Tischübersicht">
+              <section class="poker-panel">
+                <span class="panel-kicker">SPIELER</span>
+                <div id="poker-player-list" class="poker-player-list"></div>
+              </section>
+              <section class="poker-panel">
+                <span class="panel-kicker">HANDERGEBNIS</span>
+                <strong id="poker-result">Die Karten werden gegeben.</strong>
+              </section>
+              <section class="poker-panel poker-log-panel">
+                <span class="panel-kicker">TISCHPROTOKOLL</span>
+                <div id="poker-log" class="poker-log"></div>
+              </section>
             </aside>
           </div>
         </div>

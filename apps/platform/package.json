@@ -11,6 +11,7 @@
     "@metroville/game-sdk": "workspace:*",
     "@metroville/game-metroville": "workspace:*",
     "@metroville/game-tictactoe": "workspace:*",
+    "@metroville/game-texasholdem": "workspace:*",
     "colyseus.js": "0.15.28",
     "qrcode": "^1.5.4"
   },
