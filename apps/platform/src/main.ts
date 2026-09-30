@@ -24,7 +24,12 @@ const viewGame = document.getElementById('view-game')!;
 
 const playerNameInput = document.getElementById('player-name-input') as HTMLInputElement;
 const roomCodeInput = document.getElementById('room-code-input') as HTMLInputElement;
-const gameSelect = document.getElementById('game-select') as HTMLSelectElement;
+const gameSelect = document.getElementById('game-select') as HTMLInputElement;
+const gameModePicker = document.getElementById('game-mode-picker')!;
+const gameModeTrigger = document.getElementById('game-select-trigger')!;
+const gameModeValue = document.getElementById('game-select-value')!;
+const gameModeOptions = document.getElementById('game-mode-options')!;
+const gameModeOptionButtons = [...gameModeOptions.querySelectorAll<HTMLButtonElement>('[role="option"]')];
 const btnCreateRoom = document.getElementById('btn-create-room')!;
 const btnJoinRoom = document.getElementById('btn-join-room')!;
 
@@ -173,6 +178,73 @@ function syncColorMode() {
 syncAudioControls();
 if (localStorage.getItem('metroville_color_mode') === 'on') document.body.classList.add('colorblind-mode');
 syncColorMode();
+
+function closeGameModeMenu(restoreFocus = false) {
+  gameModeOptions.hidden = true;
+  gameModeTrigger.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) gameModeTrigger.focus();
+}
+
+function selectGameMode(value: string) {
+  const option = gameModeOptionButtons.find(button => button.dataset.gameId === value);
+  if (!option) return;
+  gameSelect.value = value;
+  gameModeValue.textContent = option.textContent || '';
+  gameModeOptionButtons.forEach(button => {
+    const selected = button === option;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-selected', String(selected));
+  });
+  closeGameModeMenu(true);
+}
+
+function openGameModeMenu() {
+  gameModeOptions.hidden = false;
+  gameModeTrigger.setAttribute('aria-expanded', 'true');
+  const selected = gameModeOptionButtons.find(button => button.dataset.gameId === gameSelect.value) || gameModeOptionButtons[0];
+  selected?.focus();
+}
+
+gameModeTrigger.addEventListener('click', () => {
+  if (gameModeOptions.hidden) openGameModeMenu();
+  else closeGameModeMenu();
+});
+
+gameModeTrigger.addEventListener('keydown', event => {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openGameModeMenu();
+  }
+});
+
+gameModeOptionButtons.forEach((option, index) => {
+  option.addEventListener('click', () => selectGameMode(option.dataset.gameId || ''));
+  option.addEventListener('keydown', event => {
+    let nextIndex = index;
+    if (event.key === 'ArrowDown') nextIndex = (index + 1) % gameModeOptionButtons.length;
+    else if (event.key === 'ArrowUp') nextIndex = (index - 1 + gameModeOptionButtons.length) % gameModeOptionButtons.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = gameModeOptionButtons.length - 1;
+    else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeGameModeMenu(true);
+      return;
+    } else if (event.key === 'Tab') {
+      closeGameModeMenu(true);
+      return;
+    } else return;
+    event.preventDefault();
+    gameModeOptionButtons[nextIndex]?.focus();
+  });
+});
+
+document.addEventListener('pointerdown', event => {
+  if (!gameModePicker.contains(event.target as Node)) closeGameModeMenu();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !gameModeOptions.hidden) closeGameModeMenu(true);
+});
 
 function getPlayerName(): string {
   const name = playerNameInput.value.trim() || 'Spieler';

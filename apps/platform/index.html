@@ -38,13 +38,20 @@
         </div>
 
         <div class="form-group">
-          <label for="game-select">Spielmodus</label>
-          <select id="game-select">
-            <option value="metroville">MetroVille: City of Fortune</option>
-            <option value="tictactoe">Tic-Tac-Toe</option>
-            <option value="texasholdem">Texas Hold’em</option>
-            <option value="five-card-draw">Five Card Draw</option>
-          </select>
+          <label id="game-select-label" for="game-select-trigger">Spielmodus</label>
+          <input id="game-select" type="hidden" value="metroville" />
+          <div class="game-mode-picker" id="game-mode-picker">
+            <button class="game-mode-trigger" id="game-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="game-mode-options" aria-labelledby="game-select-label game-select-value">
+              <span id="game-select-value">MetroVille: City of Fortune</span>
+              <span class="game-mode-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="game-mode-options" id="game-mode-options" role="listbox" aria-labelledby="game-select-label" hidden>
+              <button class="game-mode-option is-selected" id="game-option-metroville" type="button" role="option" data-game-id="metroville" aria-selected="true">MetroVille: City of Fortune</button>
+              <button class="game-mode-option" id="game-option-tictactoe" type="button" role="option" data-game-id="tictactoe" aria-selected="false">Tic-Tac-Toe</button>
+              <button class="game-mode-option" id="game-option-texasholdem" type="button" role="option" data-game-id="texasholdem" aria-selected="false">Texas Hold’em</button>
+              <button class="game-mode-option" id="game-option-five-card-draw" type="button" role="option" data-game-id="five-card-draw" aria-selected="false">Five Card Draw</button>
+            </div>
+          </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
