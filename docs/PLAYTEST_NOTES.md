@@ -1,27 +1,25 @@
 # MetroVille Playtest Notes
 
-**Datum:** 2026-09-29  
-**Scope:** Reiner Browser-Playtest, keine Code-, Konfigurations- oder Produktänderungen.  
-**Sessions:** Vier getrennte Browser-Origin-Sessions (Host A, Spieler B, Spieler C, Spieler D).  
-**Ergebnis:** Eine vollständige Blitz-Partie war mit dem aktuellen UI nicht startbar; der reproduzierbare Blocker ist unten dokumentiert. Der erreichbare Standardfluss wurde bis in mehrere Runden gespielt.
+**Datum:** 2026-09-30
+**Scope:** Browser-Playtest nach Preset- und Spielrahmen-Anpassungen; ergänzend Workspace-Regeltests.
+**Sessions:** Zwei getrennte Browser-Origin-Sessions (Host auf `localhost`, Spieler B auf `127.0.0.1`).
+**Ergebnis:** Presetauswahl, Blitz-Start, eine vollständige Mehrgebots-Auktion und ein Handel zwischen zwei Sessions wurden bestätigt. Gefängnis-, Bauen-, Bankrott- und Spielende-UI-Flows konnten nicht in einem vollständigen manuellen Browserlauf verifiziert werden.
+
+## Durchgeführte Flows
+
+1. **Preset-Auswahl und Start:** Host-Auswahl wurde synchron an Spieler B übertragen und war dort schreibgeschützt. Standard startete mit 1.500 Talern pro Spieler. Blitz startete mit 1.000 Talern und drei zufälligen Grundstücken pro Spieler; die Lobby zeigte das 40-Runden-Limit.
+2. **Auktion mit mehreren Geboten:** Spieler B lehnte Ratsherrenstraße ab. Host bot 10, B erhöhte auf 20, Host auf 30 und B passte. Das Grundstück ging für 30 Taler an Host.
+3. **Handel zwischen Sessions:** B bot 10 Taler für Ratsherrenstraße; Host nahm an. Geld und Eigentum wurden in beiden Sessions aktualisiert.
+4. **Lobby-Klicks:** Raum-Erstellung, Bereitmeldung und Spielstart ließen sich per Maus bedienen; ein echter Klick-Blocker wurde nicht reproduziert.
+5. **Regeltests:** Der Workspace-Testlauf bestand mit 22 Tests. Die vorhandenen MetroVille-Tests decken unter anderem Gefängnisaktionen, gleichmäßiges Bauen/Verkaufen, Bankrott und Bot-Simulationen ab; diese Tests ersetzen keinen vollständigen Browser-Playtest dieser Flows.
 
 ## Bugs
 
-### Kritisch
-
-1. **Blitz-Preset ist im Spielstart nicht auswählbar**
-   - **Reproduktion:** Lobby öffnen, MetroVille auswählen und die Startoptionen prüfen. Es gibt nur die Spielauswahl, aber kein Preset-/Variantenfeld. `START_GAME` startet anschließend mit leerer Konfiguration.
-   - **Auswirkung:** Der angeforderte Blitz-Modus mit Startgrundstücken und Rundenlimit kann nicht über die Spieleroberfläche gestartet werden. Eine vollständige Blitz-Partie war dadurch nicht testbar.
-
 ### Mittel
 
-1. **Normale Klicks auf Lobby-Aktionen reagieren im Browser-Test nicht zuverlässig**
-   - **Reproduktion:** Raum erstellen oder Raum beitreten in mehreren Sessions anklicken. Der Button war sichtbar und aktiviert, der normale Browser-Klick wartete jedoch wiederholt auf einen stabilen Zustand und lief in ein Timeout. Ein erzwungener Klick funktionierte anschließend.
-   - **Auswirkung:** Für echte Spieler kann sich der Start wie ein nicht reagierender Button anfühlen. Die Ursache kann eine laufende Transition oder ein Browser-/Automation-Randfall sein und sollte mit realer Mausbedienung gegengeprüft werden.
-
-2. **Auktions-/Handelsflows konnten im erreichbaren kurzen Durchlauf nicht vollständig belastbar gespielt werden**
-   - **Reproduktion:** Der Standardfluss wurde automatisiert über mehrere Runden geführt; der Blitz-Blocker verhinderte den geplanten kurzen End-to-End-Pfad. Kaufen, Miete, Gemeinschaftskarte und Bahnhöfe wurden erreicht, eine komplette Auktion mit mehreren manuellen Geboten jedoch nicht.
-   - **Auswirkung:** Kein bestätigter Laufzeitfehler, aber eine offene Testlücke vor Etappe 9.
+1. **Kaufen bleibt bei unzureichendem Guthaben aktiv**
+   - **Reproduktion:** Mit weniger Geld als der Grundstückspreis auf einem freien Grundstück landen. Der Kaufen-Button bleibt aktiv, die Serveraktion wird mit „Nicht genug Taler zum Kauf“ abgewiesen.
+   - **Auswirkung:** Die Oberfläche bietet eine ungültige Aktion an und wirkt nach dem Klick nicht reagierend.
 
 ### Gering
 
@@ -45,29 +43,22 @@
 
 ## Feature-Vorschläge
 
-1. Preset-Auswahl mit sichtbarer Kurzbeschreibung und Startparametern direkt in der Lobby ergänzen.
-2. Einen optionalen Zugassistenten anbieten: „Würfeln“, „Kaufen“, „Auktion“, „Zug beenden“ mit erklärendem Kontext.
-3. Ein dauerhaftes Ereignisprotokoll mit Filtern für Würfel, Geld, Besitz, Karten und Handel anbieten.
-4. Für Auktionen eine klare Gebotschronik und sichtbare Bieterreihenfolge anzeigen.
-5. Einen privaten Statusbereich für das eigene Vermögen, Grundstücke und aktive Kartenwirkungen ergänzen.
-6. Für längere Partien einen kompakten Rundenfortschritt und Nettovermögensvergleich anzeigen.
+1. Einen optionalen Zugassistenten anbieten: „Würfeln“, „Kaufen“, „Auktion“, „Zug beenden“ mit erklärendem Kontext.
+2. Ein dauerhaftes Ereignisprotokoll mit Filtern für Würfel, Geld, Besitz, Karten und Handel anbieten.
+3. Für Auktionen eine klare Gebotschronik und sichtbare Bieterreihenfolge anzeigen.
+4. Einen privaten Statusbereich für das eigene Vermögen, Grundstücke und aktive Kartenwirkungen ergänzen.
+5. Für längere Partien einen kompakten Rundenfortschritt und Nettovermögensvergleich anzeigen.
 
 ## Design-Abweichungen
 
-1. **Moodboard C ist bei Karten deutlich besser getroffen als beim Gesamtspielrahmen**
-   - Grundstückskarten mit Papierfläche, dunklem Mono-Header, Syne-Titel, Farbstreifen und gepunkteten Preiszeilen passen gut zur Vorlage.
-   - Der eigentliche Spielrahmen wirkt im Vergleich weiterhin stärker wie ein funktionales Dashboard: Sidebar-Panels und viele kleine Controls dominieren gegenüber dem haptischen Tischspielgefühl.
-
-2. **Spielfeldtexte bleiben auf kleinen Tiles sehr dicht**
+1. **Spielfeldtexte bleiben auf kleinen Tiles sehr dicht**
    - Namen, Preise und Marker sind auf normaler Desktopgröße lesbar, verlieren aber bei kleiner Darstellung schnell an Ruhe. Die Kartenansicht kompensiert das teilweise.
 
-3. **Materialität ist vorhanden, aber subtil**
+2. **Materialität ist vorhanden, aber subtil**
    - Papierkörnung und Creme-/Terrakotta-/Teal-Palette sind erkennbar. Eine stärker sichtbare Druck-/Letterpress-Hierarchie für wichtige Spielmomente würde die Moodboard-C-Identität noch klarer machen.
 
 ## Nicht abschließend geprüft
 
-- Vollständiger Blitz-End-to-End-Lauf: blockiert durch fehlende Preset-Auswahl.
-- Vollständige manuelle Auktion mit mehreren konkurrierenden Geboten.
-- Vollständiger Handel zwischen zwei realen Browser-Sessions.
-- Gefängnis-, Bauen-, Bankrott- und Spielende-Flow in einer kompletten Partie.
+- Vollständiger Blitz-End-to-End-Lauf bis zum Spielende.
+- Gefängnis-, Bauen-, Bankrott- und Spielende-UI-Flow in einer vollständigen Browser-Partie.
 - Messung von Frame-Rate und längeren Speicher-/Performanceprofilen.

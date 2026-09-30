@@ -40,6 +40,14 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       }
     });
 
+    this.onMessage('SET_GAME_PRESET', (client, message: { preset: string }) => {
+      const host = this.state.players.get(client.sessionId);
+      const variants = this.gameModule?.manifest.variants || [];
+      if (!host || !host.isHost || this.state.status !== 'lobby' || this.state.gameId !== 'metroville') return;
+      if (!variants.some((variant) => variant.id === message.preset)) return;
+      this.state.gamePreset = message.preset;
+    });
+
     this.onMessage('ADD_BOT', (client) => {
       const host = this.state.players.get(client.sessionId);
       if (!host || !host.isHost || this.state.status !== 'lobby') return;
@@ -195,7 +203,8 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       };
     });
 
-    this.runtimeGameState = this.gameModule.createInitialState({}, playersArray, this.state.seed);
+    const config = this.state.gameId === 'metroville' ? { preset: this.state.gamePreset } : {};
+    this.runtimeGameState = this.gameModule.createInitialState(config, playersArray, this.state.seed);
     this.state.status = 'playing';
     this.state.gameStateJson = JSON.stringify(this.runtimeGameState);
 

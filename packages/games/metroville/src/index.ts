@@ -176,7 +176,8 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     const rng = createRNG(initialSeed);
 
     const preset = config.preset || 'standard';
-    const startingMoney = config.startingMoney || (preset === 'blitz' ? 1000 : 1500);
+    const defaultStartingMoney = preset === 'blitz' ? 1000 : preset === 'classic_light' ? 1200 : 1500;
+    const startingMoney = config.startingMoney ?? defaultStartingMoney;
 
     const metrovillePlayers: MetrovillePlayer[] = players.map(p => ({
       ...p,
@@ -207,7 +208,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         preset,
         startingMoney,
         goPassSalary: config.goPassSalary || 200,
-        turnLimit: preset === 'blitz' ? 50 : undefined
+        turnLimit: preset === 'blitz' ? 40 : undefined
       },
       seed: initialSeed,
       randomIndex: 0,

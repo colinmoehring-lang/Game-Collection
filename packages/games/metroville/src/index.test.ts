@@ -32,12 +32,25 @@ describe('MetroVille Rule Engine', () => {
   it('initializes Blitz preset with 3 random properties per player', () => {
     const state = MetrovilleModule.createInitialState({ preset: 'blitz' }, [p1, p2], 'seed-blitz');
     expect(state.players[0].money).toBe(1000);
+    expect(state.config.turnLimit).toBe(40);
     
     // Check owned properties
     const p1Props = Object.values(state.properties).filter(p => p.ownerId === 'p1');
     const p2Props = Object.values(state.properties).filter(p => p.ownerId === 'p2');
     expect(p1Props.length).toBe(3);
     expect(p2Props.length).toBe(3);
+  });
+
+  it('initializes Klassisch Light with its advertised starting money and without auctions', () => {
+    let state = MetrovilleModule.createInitialState({ preset: 'classic_light' }, [p1, p2], 'seed-light');
+    expect(state.players[0].money).toBe(1200);
+    expect(state.config.turnLimit).toBeUndefined();
+
+    state.players[0].position = 1;
+    state.phase = 'tile_action';
+    state = MetrovilleModule.applyAction(state, { type: 'DECLINE_BUY_PROPERTY' });
+    expect(state.phase).toBe('turn_end');
+    expect(state.auction).toBeNull();
   });
 
   it('handles buying properties and updating funds', () => {

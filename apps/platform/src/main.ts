@@ -1,7 +1,7 @@
 import { Client, Room } from 'colyseus.js';
 import QRCode from 'qrcode';
 import { generateRoomCode } from '@metroville/game-sdk';
-import { METROVILLE_FIELDS } from '@metroville/game-metroville';
+import { METROVILLE_FIELDS, MetrovilleModule } from '@metroville/game-metroville';
 import { audio } from './audio.js';
 
 const BACKEND_URL = window.location.hostname === 'localhost'
@@ -37,6 +37,9 @@ const btnToggleReady = document.getElementById('btn-toggle-ready')!;
 const btnAddBot = document.getElementById('btn-add-bot')!;
 const btnStartGame = document.getElementById('btn-start-game')!;
 const btnLeaveRoom = document.getElementById('btn-leave-room')!;
+const metrovillePresetSection = document.getElementById('metroville-preset-section')!;
+const metrovillePresetSelect = document.getElementById('metroville-preset-select') as HTMLSelectElement;
+const metrovillePresetDescription = document.getElementById('metroville-preset-description')!;
 
 const gameStatusBar = document.getElementById('game-status-bar')!;
 const gameTitleHeader = document.getElementById('game-title-header')!;
@@ -98,6 +101,14 @@ let eventToastTimer: number | undefined;
 let cardDrawTimer: number | undefined;
 let lastCardKey = '';
 let lastMetroEventKey = '';
+
+const metrovillePresets = MetrovilleModule.manifest.variants || [];
+metrovillePresetSelect.replaceChildren(...metrovillePresets.map((preset) => {
+  const option = document.createElement('option');
+  option.value = preset.id;
+  option.textContent = preset.name;
+  return option;
+}));
 
 // Restore player name
 playerNameInput.value = localStorage.getItem('metroville_player_name') || `Spieler-${Math.floor(100 + Math.random() * 900)}`;
@@ -277,6 +288,17 @@ function renderLobby(state: any) {
   });
 
   // Host buttons
+  const isMetroville = state.gameId === MetrovilleModule.manifest.id;
+  metrovillePresetSection.toggleAttribute('hidden', !isMetroville);
+  if (isMetroville) {
+    const selectedPreset = metrovillePresets.find((preset) => preset.id === state.gamePreset) || metrovillePresets[0];
+    if (selectedPreset) {
+      metrovillePresetSelect.value = selectedPreset.id;
+      metrovillePresetDescription.textContent = selectedPreset.description;
+    }
+    metrovillePresetSelect.disabled = !meIsHost;
+  }
+
   if (meIsHost) {
     btnAddBot.style.display = 'inline-block';
     btnStartGame.style.display = 'inline-block';
@@ -768,6 +790,10 @@ btnAddBot.addEventListener('click', () => {
 
 btnStartGame.addEventListener('click', () => {
   currentRoom?.send('START_GAME');
+});
+
+metrovillePresetSelect.addEventListener('change', () => {
+  currentRoom?.send('SET_GAME_PRESET', { preset: metrovillePresetSelect.value });
 });
 
 btnLeaveRoom.addEventListener('click', () => {

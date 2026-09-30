@@ -14,6 +14,7 @@ export class PlayerSchema extends Schema {
 export class GameRoomState extends Schema {
   @type('string') roomCode: string = '';
   @type('string') gameId: string = 'tictactoe';
+  @type('string') gamePreset: string = 'standard';
   @type('string') status: string = 'lobby'; // 'lobby' | 'playing' | 'gameover'
   @type({ map: PlayerSchema }) players = new MapSchema<PlayerSchema>();
   @type(['string']) playerOrder = new ArraySchema<string>();
