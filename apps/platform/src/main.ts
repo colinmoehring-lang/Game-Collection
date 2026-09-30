@@ -381,6 +381,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
   const mySessionId = currentRoom?.sessionId;
   const currentPlayer = runtimeState.players.find((player: any) => player.id === mySessionId);
   const turnPlayer = runtimeState.players.find((player: any) => player.id === runtimeState.currentTurnPlayerId);
+  const lastRoller = runtimeState.players.find((player: any) => player.id === runtimeState.lastRollerId);
   const isMyTurn = roomState.currentTurnPlayerId === mySessionId;
   const currentField = currentPlayer ? METROVILLE_FIELDS[currentPlayer.position] : null;
   playMetroSound(runtimeState);
@@ -399,7 +400,7 @@ function renderMetroville(roomState: any, runtimeState: any) {
     : currentField?.name || 'Stadt der Möglichkeiten';
   metroCenterDetail.textContent = runtimeState.phase === 'gameover'
     ? runtimeState.winReason || 'Spiel beendet'
-    : `Würfel ${runtimeState.dice[0]} + ${runtimeState.dice[1]} · Runde ${runtimeState.turnCount + 1}`;
+    : `Runde ${runtimeState.turnCount + 1}`;
   metroDieOne.textContent = String(runtimeState.dice[0]);
   metroDieTwo.textContent = String(runtimeState.dice[1]);
 
@@ -411,7 +412,15 @@ function renderMetroville(roomState: any, runtimeState: any) {
   centerTitle.textContent = metroCenterTitle.textContent;
   const centerDetail = document.createElement('span');
   centerDetail.textContent = metroCenterDetail.textContent;
-  center.append(centerTitle, centerDetail);
+  const diceCaption = document.createElement('span');
+  diceCaption.className = 'metro-dice-caption';
+  diceCaption.textContent = lastRoller
+    ? `Wurf von ${lastRoller.name}: ${runtimeState.dice[0]} + ${runtimeState.dice[1]}`
+    : 'Noch kein Wurf';
+  diceCaption.setAttribute('aria-label', lastRoller
+    ? `Würfelwurf von ${lastRoller.name}: ${runtimeState.dice[0]} und ${runtimeState.dice[1]}`
+    : 'Noch kein Würfelwurf');
+  center.append(centerTitle, diceCaption, centerDetail);
   metroBoard.appendChild(center);
 
   METROVILLE_FIELDS.forEach((field) => {
@@ -450,16 +459,24 @@ function renderMetroville(roomState: any, runtimeState: any) {
       tile.dataset.owner = owner?.name || 'Belegt';
       tile.style.setProperty('--owner-color', owner?.color || 'var(--charcoal)');
     }
-    runtimeState.players
-      .filter((player: any) => player.position === field.index && !player.bankrupt)
-      .forEach((player: any) => {
+    const fieldPlayers = runtimeState.players
+      .filter((player: any) => player.position === field.index && !player.bankrupt);
+    if (fieldPlayers.length > 0) {
+      tile.classList.add('has-players');
+      const tokenStack = document.createElement('span');
+      tokenStack.className = 'metro-token-stack';
+      tokenStack.title = fieldPlayers.map((player: any) => player.name).join(', ');
+      tokenStack.setAttribute('role', 'img');
+      tokenStack.setAttribute('aria-label', `${fieldPlayers.length} Spieler auf ${field.name}: ${fieldPlayers.map((player: any) => player.name).join(', ')}`);
+      fieldPlayers.forEach((player: any) => {
         const token = document.createElement('span');
         token.className = 'metro-token';
         token.style.backgroundColor = player.color || 'var(--terracotta)';
-        token.title = player.name;
-        token.setAttribute('aria-label', player.name);
-        tile.appendChild(token);
+        token.setAttribute('aria-hidden', 'true');
+        tokenStack.appendChild(token);
       });
+      tile.appendChild(tokenStack);
+    }
     tile.addEventListener('click', () => {
         if (property) openPropertyOverlay(field.index);
     });

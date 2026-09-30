@@ -125,6 +125,8 @@ describe('MetroVille Rule Engine', () => {
     const secondRolled = MetrovilleModule.applyAction(second, { type: 'ROLL_DICE' });
 
     expect(firstRolled.dice).toEqual(secondRolled.dice);
+    expect(first.lastRollerId).toBeNull();
+    expect(firstRolled.lastRollerId).toBe('p1');
     expect(firstRolled.players[0].position).toBe(secondRolled.players[0].position);
     expect(first.randomIndex).toBe(0);
     expect(firstRolled.randomIndex).toBe(1);

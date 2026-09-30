@@ -88,6 +88,7 @@ export interface MetrovilleState {
   players: MetrovillePlayer[];
   playerOrder: string[];
   currentTurnPlayerId: string;
+  lastRollerId: string | null;
   dice: [number, number];
   doublesRolledCount: number;
   hasRolled: boolean;

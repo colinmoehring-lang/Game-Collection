@@ -286,6 +286,9 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       if (this.runtimeGameState.currentTurnPlayerId === previousId) {
         this.runtimeGameState.currentTurnPlayerId = nextId;
       }
+      if (this.runtimeGameState.lastRollerId === previousId) {
+        this.runtimeGameState.lastRollerId = nextId;
+      }
       for (const property of Object.values(this.runtimeGameState.properties) as Array<{ ownerId: string | null }>) {
         if (property.ownerId === previousId) property.ownerId = nextId;
       }

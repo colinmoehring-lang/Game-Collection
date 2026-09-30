@@ -217,6 +217,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       players: metrovillePlayers,
       playerOrder: metrovillePlayers.map(p => p.id),
       currentTurnPlayerId: metrovillePlayers[0]?.id || '',
+      lastRollerId: null,
       dice: [1, 1],
       doublesRolledCount: 0,
       hasRolled: false,
@@ -458,6 +459,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       const d1 = Math.floor(diceRng() * 6) + 1;
       const d2 = Math.floor(diceRng() * 6) + 1;
       s.randomIndex++;
+      s.lastRollerId = player.id;
       s.dice = [d1, d2];
       s.hasRolled = true;
       const isDoubles = d1 === d2;
