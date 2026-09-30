@@ -1659,6 +1659,90 @@ body.colorblind-mode .metro-tile[data-owner]::after {
   line-height: 1.4;
 }
 
+.poker-hand-ranks summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.poker-hand-ranks summary::-webkit-details-marker {
+  display: none;
+}
+
+.poker-hand-ranks summary::after {
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  margin: -3px 2px 0 0;
+  transform: rotate(45deg);
+  border-right: 2px solid var(--terracotta-dark);
+  border-bottom: 2px solid var(--terracotta-dark);
+  content: '';
+  transition: transform 120ms ease;
+}
+
+.poker-hand-ranks[open] summary::after {
+  margin-top: 4px;
+  transform: rotate(225deg);
+}
+
+.poker-ranks-summary {
+  margin-left: auto;
+  color: var(--warm-grey);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+}
+
+.poker-rank-list {
+  display: grid;
+  gap: 0;
+  max-height: min(420px, 48vh);
+  overflow-y: auto;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.poker-rank-list li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 7px 0;
+  border-top: 1px dashed var(--border-color);
+}
+
+.poker-rank-number {
+  padding-top: 1px;
+  color: var(--terracotta-dark);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.poker-rank-list li > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.poker-rank-list strong {
+  color: var(--charcoal);
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.poker-rank-list small {
+  color: var(--warm-grey);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
 .poker-log {
   max-height: 200px;
   overflow: auto;

@@ -107,6 +107,7 @@ describe('Texas Hold’em', () => {
     expect(evaluateFive(['AS', '2D', '3H', '4C', '5S']).score).toEqual([4, 5]);
     expect(evaluateBestHand(['AS', 'KD', 'QH', 'JC', 'TS', '2D', '3H']).name).toBe('Straight');
     expect(evaluateFive(['AS', 'AH', 'KD', 'KC', 'QS']).score).toEqual([2, 14, 13, 12]);
+    expect(evaluateFive(['TS', 'JS', 'QS', 'KS', 'AS']).name).toBe('Royal Flush');
   });
 
   it('plays a complete Five Card Draw hand with a validated draw round', () => {

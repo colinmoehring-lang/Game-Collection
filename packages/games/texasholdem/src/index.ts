@@ -79,7 +79,7 @@ export function evaluateFive(cards: string[]): EvaluatedHand {
       : distinct.join(',') === '14,5,4,3,2' ? 5 : 0
     : 0;
 
-  if (flush && straightHigh) return { score: [8, straightHigh], name: HAND_NAMES[8] };
+  if (flush && straightHigh) return { score: [8, straightHigh], name: straightHigh === 14 ? 'Royal Flush' : HAND_NAMES[8] };
   if (groups[0][1] === 4) return { score: [7, groups[0][0], groups[1][0]], name: HAND_NAMES[7] };
   if (groups[0][1] === 3 && groups[1][1] === 2) return { score: [6, groups[0][0], groups[1][0]], name: HAND_NAMES[6] };
   if (flush) return { score: [5, ...values], name: HAND_NAMES[5] };
