@@ -129,6 +129,8 @@ const metroOfferedMoney = document.getElementById('metro-offered-money') as HTML
 const metroOfferedProperties = document.getElementById('metro-offered-properties') as HTMLSelectElement;
 const metroRequestedMoney = document.getElementById('metro-requested-money') as HTMLInputElement;
 const metroRequestedProperties = document.getElementById('metro-requested-properties') as HTMLSelectElement;
+const metroTradeLease = document.getElementById('metro-trade-lease') as HTMLInputElement;
+const metroTradeLeaseLabel = document.getElementById('metro-trade-lease-label')!;
 const metroActionOfferTrade = document.getElementById('metro-action-offer-trade')!;
 const metroTradeStatus = document.getElementById('metro-trade-status')!;
 const metroActionAcceptTrade = document.getElementById('metro-action-accept-trade')!;
@@ -735,6 +737,12 @@ function renderMetroville(roomState: any, runtimeState: any) {
   centerTitle.textContent = metroCenterTitle.textContent;
   const centerDetail = document.createElement('span');
   centerDetail.textContent = metroCenterDetail.textContent;
+  if (runtimeState.config.mechanics?.cityParkJackpot) {
+    const jackpot = document.createElement('span');
+    jackpot.className = 'metro-center-jackpot';
+    jackpot.textContent = `Stadtpark-Jackpot: ${runtimeState.cityParkJackpot} Taler`;
+    center.appendChild(jackpot);
+  }
   const diceCaption = document.createElement('span');
   diceCaption.className = 'metro-dice-caption';
   diceCaption.textContent = diceCaptionText;
@@ -1383,6 +1391,12 @@ function renderTradeControls(roomState: any, runtimeState: any, mySessionId: str
   const pendingTrade = runtimeState.pendingTrade;
   const pendingForMe = pendingTrade?.toPlayerId === mySessionId;
   const canOffer = isMyTurn && roomState.status === 'playing' && runtimeState.phase === 'turn_end' && !pendingTrade && Boolean(target);
+  const leasesEnabled = Boolean(runtimeState.config.mechanics?.propertyLeases);
+  const leaseOption = metroTradeLease.closest('.metro-lease-option') as HTMLElement | null;
+  leaseOption?.toggleAttribute('hidden', !leasesEnabled);
+  metroTradeLease.disabled = !canOffer || !leasesEnabled;
+  if (!leasesEnabled) metroTradeLease.checked = false;
+  metroTradeLeaseLabel.textContent = `Ausgewählte Grundstücke als Pacht behandeln (${runtimeState.config.leaseDurationRounds} Runden)`;
   const offerDisabledReason = pendingTrade
     ? 'Es ist bereits ein Handelsangebot offen.'
     : !target
@@ -1403,10 +1417,14 @@ function renderTradeControls(roomState: any, runtimeState: any, mySessionId: str
     metroTradeStatus.textContent = currentPlayer ? (canOffer ? 'Kein offenes Angebot.' : offerDisabledReason) : '';
   } else if (pendingForMe) {
     const offerer = runtimeState.players.find((player: any) => player.id === pendingTrade.fromPlayerId);
-    metroTradeStatus.textContent = `Angebot von ${offerer?.name || 'Mitspieler'} wartet auf Antwort.`;
+    const leaseCount = (pendingTrade.offeredLeasePropertyIndices || []).length
+      + (pendingTrade.requestedLeasePropertyIndices || []).length;
+    metroTradeStatus.textContent = `Angebot von ${offerer?.name || 'Mitspieler'} wartet auf Antwort.${leaseCount ? ` Enthält ${leaseCount} Pacht${leaseCount === 1 ? '' : 'en'} für ${runtimeState.config.leaseDurationRounds} Runden.` : ''}`;
   } else if (pendingTrade.fromPlayerId === mySessionId) {
     const recipient = runtimeState.players.find((player: any) => player.id === pendingTrade.toPlayerId);
-    metroTradeStatus.textContent = `Angebot an ${recipient?.name || 'Mitspieler'} wartet.`;
+    const leaseCount = (pendingTrade.offeredLeasePropertyIndices || []).length
+      + (pendingTrade.requestedLeasePropertyIndices || []).length;
+    metroTradeStatus.textContent = `Angebot an ${recipient?.name || 'Mitspieler'} wartet.${leaseCount ? ` Enthält ${leaseCount} Pacht${leaseCount === 1 ? '' : 'en'} für ${runtimeState.config.leaseDurationRounds} Runden.` : ''}`;
   } else {
     metroTradeStatus.textContent = 'Ein Handelsangebot ist offen.';
   }
@@ -1543,8 +1561,14 @@ metroActionOfferTrade.addEventListener('click', () => {
       toPlayerId: metroTradeTarget.value,
       offeredMoney: Number(metroOfferedMoney.value) || 0,
       offeredPropertyIndices: [...metroOfferedProperties.selectedOptions].map(option => Number(option.value)),
+      offeredLeasePropertyIndices: metroTradeLease.checked
+        ? [...metroOfferedProperties.selectedOptions].map(option => Number(option.value))
+        : [],
       requestedMoney: Number(metroRequestedMoney.value) || 0,
-      requestedPropertyIndices: [...metroRequestedProperties.selectedOptions].map(option => Number(option.value))
+      requestedPropertyIndices: [...metroRequestedProperties.selectedOptions].map(option => Number(option.value)),
+      requestedLeasePropertyIndices: metroTradeLease.checked
+        ? [...metroRequestedProperties.selectedOptions].map(option => Number(option.value))
+        : []
     }
   });
 });

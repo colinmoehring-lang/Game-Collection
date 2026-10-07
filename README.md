@@ -71,4 +71,4 @@ Der Test nutzt zwei Browser-Sitzungen, weil Tic-Tac-Toe genau zwei Spieler zulä
 
 ## Projektstand
 
-Die geplanten Etappen 1 bis 9 sind abgeschlossen. Die dokumentierten offenen Playtest-Punkte und nicht vollständig geprüften Spielabläufe stehen in [docs/PLAYTEST_NOTES.md](docs/PLAYTEST_NOTES.md). Architektur- und Beitragskonventionen stehen in [docs/CONVENTIONS.md](docs/CONVENTIONS.md); den Etappenverlauf findest du in [docs/PROGRESS.md](docs/PROGRESS.md).
+Die geplanten Etappen 1 bis 9 sind abgeschlossen. Die dokumentierten offenen Playtest-Punkte und nicht vollständig geprüften Spielabläufe stehen in [docs/PLAYTEST_NOTES.md](docs/PLAYTEST_NOTES.md). Architektur- und Beitragskonventionen stehen in [docs/CONVENTIONS.md](docs/CONVENTIONS.md); den Etappenverlauf findest du in [docs/PROGRESS.md](docs/PROGRESS.md). Für den Start einer neuen KI-Session gibt es [docs/AI_SESSION_CONTEXT.md](docs/AI_SESSION_CONTEXT.md).

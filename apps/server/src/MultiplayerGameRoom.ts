@@ -8,7 +8,7 @@ import {
   computeBotActionDelay,
   metroBotFallbackAction
 } from './botTurn.js';
-import { MetrovilleModule } from '@metroville/game-metroville';
+import { MetrovilleModule, remapMetrovillePlayerId } from '@metroville/game-metroville';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
 import { TexasHoldemModule } from '@metroville/game-texasholdem';
 import { FiveCardDrawModule } from '@metroville/game-texasholdem';
@@ -276,6 +276,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
     this.syncTurnPlayerId();
 
     this.scheduleBotTurn(stateBefore);
+    this.scheduleBotTradeResponse(action);
   }
 
   private clearBotTimers() {
@@ -336,6 +337,25 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
 
   private triggerBotTurnIfNeeded() {
     this.scheduleBotTurn(null);
+  }
+
+  private scheduleBotTradeResponse(action: any) {
+    if (this.state.gameId !== 'metroville' || action?.type !== 'OFFER_TRADE') return;
+    const trade = this.runtimeGameState?.pendingTrade;
+    if (!trade) return;
+    if (!this.botInstances.has(trade.toPlayerId)) return;
+
+    const tradeId = trade.id;
+    const botId = trade.toPlayerId;
+    setTimeout(async () => {
+      if (this.runtimeGameState?.pendingTrade?.id !== tradeId) return;
+      const bot = this.botInstances.get(botId);
+      if (!bot) return;
+      const response = await bot.chooseAction(this.runtimeGameState, botId);
+      if (response?.type === 'ACCEPT_TRADE' || response?.type === 'DECLINE_TRADE') {
+        this.executeAction(response, botId);
+      }
+    }, 0);
   }
 
   private syncTurnPlayerId() {
@@ -400,22 +420,7 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       return;
     }
     if (this.state.gameId === 'metroville') {
-      const player = this.runtimeGameState.players.find((candidate: Player) => candidate.id === previousId);
-      if (player) player.id = nextId;
-      this.runtimeGameState.playerOrder = this.runtimeGameState.playerOrder.map((id: string) => id === previousId ? nextId : id);
-      if (this.runtimeGameState.currentTurnPlayerId === previousId) {
-        this.runtimeGameState.currentTurnPlayerId = nextId;
-      }
-      if (this.runtimeGameState.lastRollerId === previousId) {
-        this.runtimeGameState.lastRollerId = nextId;
-      }
-      for (const property of Object.values(this.runtimeGameState.properties) as Array<{ ownerId: string | null }>) {
-        if (property.ownerId === previousId) property.ownerId = nextId;
-      }
-      if (this.runtimeGameState.pendingTrade) {
-        if (this.runtimeGameState.pendingTrade.fromPlayerId === previousId) this.runtimeGameState.pendingTrade.fromPlayerId = nextId;
-        if (this.runtimeGameState.pendingTrade.toPlayerId === previousId) this.runtimeGameState.pendingTrade.toPlayerId = nextId;
-      }
+      this.runtimeGameState = remapMetrovillePlayerId(this.runtimeGameState, previousId, nextId);
       return;
     }
     if (this.state.gameId === 'texasholdem' || this.state.gameId === 'five-card-draw') {

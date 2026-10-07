@@ -7,7 +7,7 @@
 
 ## Durchgeführte Flows
 
-1. **Preset-Auswahl und Start:** Host-Auswahl wurde synchron an Spieler B übertragen und war dort schreibgeschützt. Standard startete mit 1.500 Talern pro Spieler. Blitz startete mit 1.000 Talern und drei zufälligen Grundstücken pro Spieler; die Lobby zeigte das 40-Runden-Limit.
+1. **Preset-Auswahl und Start:** Host-Auswahl wurde synchron an Spieler B übertragen und war dort schreibgeschützt. Standard startete mit 1.500 Talern pro Spieler. Blitz startete mit 1.000 Talern und drei zufälligen Grundstücken pro Spieler; die Lobby zeigte ein Limit von 40 Spielerzügen.
 2. **Auktion mit mehreren Geboten:** Spieler B lehnte Ratsherrenstraße ab. Host bot 10, B erhöhte auf 20, Host auf 30 und B passte. Das Grundstück ging für 30 Taler an Host.
 3. **Handel zwischen Sessions:** B bot 10 Taler für Ratsherrenstraße; Host nahm an. Geld und Eigentum wurden in beiden Sessions aktualisiert.
 4. **Lobby-Klicks:** Raum-Erstellung, Bereitmeldung und Spielstart ließen sich per Maus bedienen; ein echter Klick-Blocker wurde nicht reproduziert.

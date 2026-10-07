@@ -11,14 +11,28 @@ import { shuffleArray, createRNG } from '@metroville/game-sdk';
 import type {
   MetrovilleState,
   MetrovilleAction,
-  MetrovilleConfig,
+  MetrovilleConfigInput,
+  MetrovilleMechanics,
   MetrovillePlayer,
   PropertyState,
   TradeOffer,
   AuctionState
 } from './types.js';
+import { METROVILLE_PRESET_MECHANICS, METROVILLE_RULE_DEFAULTS } from './types.js';
 import { METROVILLE_FIELDS, DISTRICT_MAP } from './board.js';
 import { EXPRESS_CARDS, STADTRAT_CARDS, ALL_CARDS_MAP } from './cards.js';
+import { addToCityParkJackpot, grantGoPassSalary } from './economy.js';
+export { remapMetrovillePlayerId } from './state.js';
+export { METROVILLE_RULE_DEFAULTS } from './types.js';
+export { METROVILLE_PRESET_MECHANICS } from './types.js';
+export type {
+  MetrovilleConfig,
+  MetrovilleConfigInput,
+  MetrovilleMechanics,
+  MetrovilleState,
+  PropertyLease,
+  TradeOffer
+} from './types.js';
 
 export const MetrovilleManifest: GameManifest = {
   id: 'metroville',
@@ -35,7 +49,7 @@ export const MetrovilleManifest: GameManifest = {
     {
       id: 'blitz',
       name: 'Blitz-Modus (Schnell)',
-      description: 'Startkapital 1000 Taler, 3 zufällige Grundstücke zu Spielbeginn, 40 Runden-Limit.'
+      description: 'Startkapital 1000 Taler, 3 zufällige Grundstücke zu Spielbeginn, Limit von 40 Spielerzügen.'
     },
     {
       id: 'standard',
@@ -62,6 +76,162 @@ export const MetrovilleManifest: GameManifest = {
 };
 
 export { METROVILLE_FIELDS, DISTRICT_MAP } from './board.js';
+
+const BOT_TRADE_DISTRICT_BONUS_RATE = 0.75;
+const BOT_TRADE_OFFER_PREMIUM = 10;
+const BOT_TRADE_THRESHOLDS = {
+  easy: { reserve: 250, minimumGainRate: 0.5 },
+  medium: { reserve: 150, minimumGainRate: 0.2 },
+  hard: { reserve: 100, minimumGainRate: 0.05 }
+} as const;
+
+function portfolioValue(
+  state: MetrovilleState,
+  playerId: string,
+  propertyOwners: Map<number, string | null>
+): number {
+  let value = 0;
+  for (const [index, property] of Object.entries(state.properties)) {
+    if (propertyOwners.get(Number(index)) !== playerId) continue;
+    const field = METROVILLE_FIELDS[Number(index)];
+    if (!field?.cost) continue;
+    value += field.cost
+      - (property.isMortgaged ? Math.round(field.cost * 0.5) : 0)
+      + property.houses * Math.floor((field.houseCost || 0) / 2);
+  }
+
+  for (const indices of Object.values(DISTRICT_MAP)) {
+    if (indices.length === 0 || METROVILLE_FIELDS[indices[0]]?.type !== 'property') continue;
+    if (indices.every(index => propertyOwners.get(index) === playerId)) {
+      const districtCost = indices.reduce((sum, index) => sum + (METROVILLE_FIELDS[index].cost || 0), 0);
+      value += Math.floor(districtCost * BOT_TRADE_DISTRICT_BONUS_RATE);
+    }
+  }
+  return value;
+}
+
+function tradeAssetValueForPlayer(state: MetrovilleState, trade: TradeOffer, playerId: string): number {
+  const ownersBefore = new Map<number, string | null>(
+    Object.entries(state.properties).map(([index, property]) => [Number(index), property.ownerId])
+  );
+  const ownersAfter = new Map(ownersBefore);
+  (trade.offeredPropertyIndices || [])
+    .filter(index => !(trade.offeredLeasePropertyIndices || []).includes(index))
+    .forEach(index => ownersAfter.set(index, trade.toPlayerId));
+  (trade.requestedPropertyIndices || [])
+    .filter(index => !(trade.requestedLeasePropertyIndices || []).includes(index))
+    .forEach(index => ownersAfter.set(index, trade.fromPlayerId));
+
+  const cashDelta = playerId === trade.toPlayerId
+    ? trade.offeredMoney - trade.requestedMoney
+    : playerId === trade.fromPlayerId
+      ? trade.requestedMoney - trade.offeredMoney
+      : 0;
+  return portfolioValue(state, playerId, ownersAfter)
+    - portfolioValue(state, playerId, ownersBefore)
+    + cashDelta;
+}
+
+function tradeAcceptanceError(state: MetrovilleState, trade: TradeOffer, playerId: string): string | null {
+  const offerer = state.players.find(candidate => candidate.id === trade.fromPlayerId);
+  const recipient = state.players.find(candidate => candidate.id === playerId);
+  if (!offerer || offerer.bankrupt || !recipient || recipient.bankrupt) {
+    return 'Ein Handelspartner ist nicht mehr im Spiel';
+  }
+  if (!trade.offeredPropertyIndices.every(index => state.properties[index]?.ownerId === offerer.id)
+    || !trade.requestedPropertyIndices.every(index => state.properties[index]?.ownerId === recipient.id)) {
+    return 'Ein angebotenes Grundstück hat inzwischen einen anderen Besitzer';
+  }
+  if (offerer.money + trade.requestedMoney < trade.offeredMoney
+    || recipient.money + trade.offeredMoney < trade.requestedMoney) {
+    return 'Das Angebot ist nicht mehr finanzierbar';
+  }
+  const leasedIndices = [
+    ...(trade.offeredLeasePropertyIndices || []),
+    ...(trade.requestedLeasePropertyIndices || [])
+  ];
+  if (leasedIndices.some(index => state.leases[index] || state.properties[index]?.isMortgaged)) {
+    return 'Ein Grundstück aus dem Pachtangebot ist nicht mehr verfügbar';
+  }
+  return null;
+}
+
+function makeBotTradeOffer(
+  state: MetrovilleState,
+  playerId: string,
+  difficulty: BotDifficulty
+): MetrovilleAction | null {
+  if (!state.config.mechanics.botTrading || state.pendingTrade) return null;
+  if (state.botTradeOfferRounds[playerId] === state.roundCount) return null;
+  const bot = state.players.find(player => player.id === playerId);
+  if (!bot?.isBot || bot.bankrupt) return null;
+
+  const threshold = BOT_TRADE_THRESHOLDS[difficulty];
+  let best: { action: MetrovilleAction; score: number } | null = null;
+  const botOwned = new Set(Object.entries(state.properties)
+    .filter(([, property]) => property.ownerId === playerId)
+    .map(([index]) => Number(index)));
+
+  for (const target of state.players) {
+    if (target.id === playerId || target.bankrupt) continue;
+    for (const districtIndices of Object.values(DISTRICT_MAP)) {
+      if (districtIndices.length === 0 || METROVILLE_FIELDS[districtIndices[0]]?.type !== 'property') continue;
+      const botDistrictProperties = districtIndices.filter(index => botOwned.has(index));
+      if (botDistrictProperties.length !== districtIndices.length - 1) continue;
+      const requestedIndex = districtIndices.find(index => state.properties[index]?.ownerId === target.id);
+      if (requestedIndex === undefined) continue;
+      const requestedProperty = state.properties[requestedIndex];
+      if (!requestedProperty || requestedProperty.isMortgaged || requestedProperty.houses > 0
+        || state.leases[requestedIndex]) continue;
+
+      const offeredPropertyOptions: number[][] = [[]];
+      for (const offeredIndex of [...botOwned].sort((left, right) => left - right)) {
+        const property = state.properties[offeredIndex];
+        if (!property || property.isMortgaged || property.houses > 0 || state.leases[offeredIndex]) continue;
+        if (offeredIndex !== requestedIndex) offeredPropertyOptions.push([offeredIndex]);
+      }
+
+      for (const offeredPropertyIndices of offeredPropertyOptions) {
+        const offer: TradeOffer = {
+          id: '',
+          fromPlayerId: playerId,
+          toPlayerId: target.id,
+          offeredMoney: 0,
+          offeredPropertyIndices,
+          requestedMoney: 0,
+          requestedPropertyIndices: [requestedIndex]
+        };
+        const targetAssetDelta = tradeAssetValueForPlayer(state, offer, target.id);
+        const botAssetDelta = tradeAssetValueForPlayer(state, offer, playerId);
+        const requestedCost = METROVILLE_FIELDS[requestedIndex].cost || 0;
+        const requiredPremium = Math.max(
+          BOT_TRADE_OFFER_PREMIUM,
+          Math.ceil(requestedCost * 0.05 / 10) * 10
+        );
+        const offeredMoney = Math.ceil(Math.max(0, requiredPremium - targetAssetDelta) / 10) * 10;
+        const botGain = botAssetDelta - offeredMoney;
+        if (bot.money - offeredMoney < threshold.reserve
+          || botGain < requestedCost * threshold.minimumGainRate) continue;
+
+        offer.offeredMoney = offeredMoney;
+        const action: MetrovilleAction = {
+          type: 'OFFER_TRADE',
+          offer: {
+            fromPlayerId: offer.fromPlayerId,
+            toPlayerId: offer.toPlayerId,
+            offeredMoney: offer.offeredMoney,
+            offeredPropertyIndices: offer.offeredPropertyIndices,
+            requestedMoney: offer.requestedMoney,
+            requestedPropertyIndices: offer.requestedPropertyIndices
+          }
+        };
+        const score = botGain + targetAssetDelta;
+        if (!best || score > best.score) best = { action, score };
+      }
+    }
+  }
+  return best?.action || null;
+}
 
 export function calculateRent(fieldIndex: number, state: MetrovilleState): number {
   const field = METROVILLE_FIELDS[fieldIndex];
@@ -103,6 +273,18 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
   chooseAction(state: MetrovilleState, playerId: string): MetrovilleAction {
     const player = state.players.find(p => p.id === playerId);
     if (!player) return { type: 'END_TURN' };
+    if (player.bankrupt) return { type: 'END_TURN' };
+
+    if (state.pendingTrade?.toPlayerId === playerId) {
+      const acceptanceError = tradeAcceptanceError(state, state.pendingTrade, playerId);
+      if ((state.pendingTrade.offeredLeasePropertyIndices?.length || 0) > 0
+        || (state.pendingTrade.requestedLeasePropertyIndices?.length || 0) > 0
+        || acceptanceError
+        || tradeAssetValueForPlayer(state, state.pendingTrade, playerId) < 0) {
+        return { type: 'DECLINE_TRADE', tradeId: state.pendingTrade.id };
+      }
+      return { type: 'ACCEPT_TRADE', tradeId: state.pendingTrade.id };
+    }
 
     if (state.phase === 'card_reveal') {
       return { type: 'DISMISS_CARD' };
@@ -164,6 +346,8 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
           }
         }
       }
+      const tradeOffer = makeBotTradeOffer(state, playerId, this.difficulty);
+      if (tradeOffer) return tradeOffer;
       return { type: 'END_TURN' };
     }
 
@@ -197,7 +381,7 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
   }
 }
 
-export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Partial<MetrovilleConfig>> = {
+export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, MetrovilleConfigInput> = {
   manifest: MetrovilleManifest,
 
   createInitialState(config, players, seed): MetrovilleState {
@@ -207,6 +391,11 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     const preset = config.preset || 'standard';
     const defaultStartingMoney = preset === 'blitz' ? 1000 : preset === 'classic_light' ? 1200 : 1500;
     const startingMoney = config.startingMoney ?? defaultStartingMoney;
+    const configuredTaxMultiplier = config.taxMultiplier ?? METROVILLE_RULE_DEFAULTS.taxMultiplier;
+    const mechanics: MetrovilleMechanics = {
+      ...METROVILLE_PRESET_MECHANICS[preset],
+      ...config.mechanics
+    };
 
     const metrovillePlayers: MetrovillePlayer[] = players.map(p => ({
       ...p,
@@ -236,12 +425,21 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       config: {
         preset,
         startingMoney,
-        goPassSalary: config.goPassSalary || 200,
-        turnLimit: preset === 'blitz' ? 40 : undefined
+        turnLimit: config.turnLimit ?? (preset === 'blitz' ? 40 : undefined),
+        cityParkJackpotCap: Math.max(0, Math.floor(config.cityParkJackpotCap ?? METROVILLE_RULE_DEFAULTS.cityParkJackpotCap)),
+        lowestWealthBonusAmount: Math.max(0, Math.floor(config.lowestWealthBonusAmount ?? METROVILLE_RULE_DEFAULTS.lowestWealthBonusAmount)),
+        leaseDurationRounds: Math.max(1, Math.floor(config.leaseDurationRounds ?? METROVILLE_RULE_DEFAULTS.leaseDurationRounds)),
+        goPassSalary: Math.max(0, Math.floor(config.goPassSalary ?? METROVILLE_RULE_DEFAULTS.goPassSalary)),
+        taxMultiplier: Number.isFinite(configuredTaxMultiplier)
+          ? Math.max(0, configuredTaxMultiplier)
+          : METROVILLE_RULE_DEFAULTS.taxMultiplier,
+        mechanics
       },
       seed: initialSeed,
       randomIndex: 0,
       turnCount: 0,
+      roundCount: 0,
+      playersActedThisRound: [],
       tradeSequence: 0,
       players: metrovillePlayers,
       playerOrder: metrovillePlayers.map(p => p.id),
@@ -250,8 +448,11 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       dice: [1, 1],
       doublesRolledCount: 0,
       hasRolled: false,
+      botTradeOfferRounds: {},
       phase: 'roll',
       properties,
+      cityParkJackpot: 0,
+      leases: {},
       chanceDeck,
       communityDeck,
       lastDrawnCard: null,
@@ -284,7 +485,10 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     }
 
     const player = state.players.find(p => p.id === playerId);
-    if (!player || player.bankrupt) {
+    if (!player) {
+      return { valid: false, error: 'Ungültiger oder bankrotter Spieler' };
+    }
+    if (player.bankrupt && !(action.type === 'END_TURN' && state.phase === 'turn_end' && state.currentTurnPlayerId === playerId)) {
       return { valid: false, error: 'Ungültiger oder bankrotter Spieler' };
     }
 
@@ -314,6 +518,10 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       if (!state.pendingTrade || state.pendingTrade.toPlayerId !== playerId || state.pendingTrade.id !== action.tradeId) {
         return { valid: false, error: 'Kein Angebot für dich vorhanden' };
       }
+      if (action.type === 'ACCEPT_TRADE') {
+        const acceptanceError = tradeAcceptanceError(state, state.pendingTrade, playerId);
+        if (acceptanceError) return { valid: false, error: acceptanceError };
+      }
       return { valid: true };
     }
 
@@ -322,9 +530,17 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       const target = state.players.find(candidate => candidate.id === offer.toPlayerId);
       const offeredProperties = [...new Set(offer.offeredPropertyIndices)];
       const requestedProperties = [...new Set(offer.requestedPropertyIndices)];
+      const offeredLeases = offer.offeredLeasePropertyIndices || [];
+      const requestedLeases = offer.requestedLeasePropertyIndices || [];
       if (state.pendingTrade) return { valid: false, error: 'Es ist bereits ein Angebot offen' };
       if (state.phase !== 'turn_end' || offer.fromPlayerId !== playerId || !target || target.bankrupt || target.id === playerId) {
         return { valid: false, error: 'Handel in dieser Situation nicht möglich' };
+      }
+      if (player.isBot && !state.config.mechanics.botTrading) {
+        return { valid: false, error: 'Bot-Handel ist deaktiviert' };
+      }
+      if (player.isBot && state.botTradeOfferRounds[playerId] === state.roundCount) {
+        return { valid: false, error: 'Der Bot hat in dieser Runde bereits ein Angebot gemacht' };
       }
       if (offer.offeredMoney < 0 || offer.requestedMoney < 0 || offer.offeredMoney > player.money) {
         return { valid: false, error: 'Ungültiger Geldbetrag im Angebot' };
@@ -332,11 +548,25 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       if (offeredProperties.length !== offer.offeredPropertyIndices.length || requestedProperties.length !== offer.requestedPropertyIndices.length) {
         return { valid: false, error: 'Grundstücke dürfen nicht doppelt angeboten werden' };
       }
+      if (new Set(offeredLeases).size !== offeredLeases.length || new Set(requestedLeases).size !== requestedLeases.length
+        || !offeredLeases.every(index => offeredProperties.includes(index))
+        || !requestedLeases.every(index => requestedProperties.includes(index))) {
+        return { valid: false, error: 'Pacht muss zu einem angebotenen Grundstück gehören' };
+      }
+      if ((offeredLeases.length > 0 || requestedLeases.length > 0) && !state.config.mechanics.propertyLeases) {
+        return { valid: false, error: 'Pacht ist in diesem Preset deaktiviert' };
+      }
       if (!offeredProperties.every(index => state.properties[index]?.ownerId === playerId)) {
         return { valid: false, error: 'Du besitzt nicht alle angebotenen Grundstücke' };
       }
       if (!requestedProperties.every(index => state.properties[index]?.ownerId === target.id)) {
         return { valid: false, error: 'Der Zielspieler besitzt nicht alle angeforderten Grundstücke' };
+      }
+      if ([...offeredLeases, ...requestedLeases].some(index => {
+        const field = METROVILLE_FIELDS[index];
+        return !field?.cost || state.properties[index]?.isMortgaged || state.leases[index];
+      })) {
+        return { valid: false, error: 'Dieses Grundstück kann nicht verpachtet werden' };
       }
       if (offer.offeredMoney === 0 && offeredProperties.length === 0 && offer.requestedMoney === 0 && requestedProperties.length === 0) {
         return { valid: false, error: 'Leere Angebote sind nicht erlaubt' };
@@ -418,6 +648,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       if (!field || !prop || prop.ownerId !== playerId || field.type !== 'property') {
         return { valid: false, error: 'Nicht dein bebaubares Grundstück' };
       }
+      if (state.leases[action.propertyIndex]) return { valid: false, error: 'Während einer Pacht darf nicht gebaut werden' };
       if (prop.houses >= 5) return { valid: false, error: 'Bereits maximal ausgebaut' };
       if (!field.houseCost || player.money < field.houseCost) {
         return { valid: false, error: 'Nicht genug Taler für den Ausbau' };
@@ -441,6 +672,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       if (!field || !prop || prop.ownerId !== playerId || field.type !== 'property') {
         return { valid: false, error: 'Nicht dein bebaubares Grundstück' };
       }
+      if (state.leases[action.propertyIndex]) return { valid: false, error: 'Während einer Pacht darf nicht abgerissen werden' };
       if (prop.houses <= 0 || !field.houseCost) {
         return { valid: false, error: 'Kein Gebäude zum Verkauf vorhanden' };
       }
@@ -457,6 +689,7 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     if (action.type === 'MORTGAGE') {
       const prop = state.properties[action.propertyIndex];
       if (!prop || prop.ownerId !== playerId) return { valid: false, error: 'Nicht dein Grundstück' };
+      if (state.leases[action.propertyIndex]) return { valid: false, error: 'Während einer Pacht darf nicht beliehen werden' };
       if (prop.isMortgaged) return { valid: false, error: 'Bereits beliehen' };
       if (prop.houses > 0) return { valid: false, error: 'Erst Gebäude verkaufen' };
       return { valid: true };
@@ -478,9 +711,12 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
     const s = {
       ...state,
       players: state.players.map(p => ({ ...p })),
+      playersActedThisRound: [...state.playersActedThisRound],
+      botTradeOfferRounds: { ...state.botTradeOfferRounds },
       properties: Object.fromEntries(
         Object.entries(state.properties).map(([index, property]) => [index, { ...property }])
       ),
+      leases: Object.fromEntries(Object.entries(state.leases).map(([index, lease]) => [index, { ...lease }])),
       auction: state.auction
         ? { ...state.auction, activePlayerIds: [...state.auction.activePlayerIds] }
         : null,
@@ -488,7 +724,9 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         ? {
             ...state.pendingTrade,
             offeredPropertyIndices: [...state.pendingTrade.offeredPropertyIndices],
-            requestedPropertyIndices: [...state.pendingTrade.requestedPropertyIndices]
+            offeredLeasePropertyIndices: [...(state.pendingTrade.offeredLeasePropertyIndices || [])],
+            requestedPropertyIndices: [...state.pendingTrade.requestedPropertyIndices],
+            requestedLeasePropertyIndices: [...(state.pendingTrade.requestedLeasePropertyIndices || [])]
           }
         : null,
       log: [...state.log]
@@ -691,8 +929,17 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       s.tradeSequence++;
       s.pendingTrade = {
         id: `trade-${s.tradeSequence}`,
-        ...action.offer
+        ...action.offer,
+        offeredLeasePropertyIndices: [...(action.offer.offeredLeasePropertyIndices || [])],
+        requestedLeasePropertyIndices: [...(action.offer.requestedLeasePropertyIndices || [])]
       };
+      const offerer = s.players.find(candidate => candidate.id === action.offer.fromPlayerId);
+      if (offerer?.isBot) {
+        s.botTradeOfferRounds = {
+          ...s.botTradeOfferRounds,
+          [offerer.id]: s.roundCount
+        };
+      }
       const target = s.players.find(candidate => candidate.id === action.offer.toPlayerId);
       s.log.push(`${player.name} bietet ${target?.name || 'einem Mitspieler'} einen Handel an.`);
       return s;
@@ -704,13 +951,41 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
       const offerer = s.players.find(candidate => candidate.id === trade.fromPlayerId);
       const recipient = s.players.find(candidate => candidate.id === trade.toPlayerId);
       if (offerer && recipient) {
+        const recipientTradeValue = tradeAssetValueForPlayer(s, trade, recipient.id);
         offerer.money -= trade.offeredMoney;
         recipient.money += trade.offeredMoney;
         recipient.money -= trade.requestedMoney;
         offerer.money += trade.requestedMoney;
-        trade.offeredPropertyIndices.forEach(index => { s.properties[index].ownerId = recipient.id; });
-        trade.requestedPropertyIndices.forEach(index => { s.properties[index].ownerId = offerer.id; });
-        s.log.push(`${recipient.name} nimmt den Handel mit ${offerer.name} an.`);
+        const offeredLeaseIndices = trade.offeredLeasePropertyIndices || [];
+        const requestedLeaseIndices = trade.requestedLeasePropertyIndices || [];
+        trade.offeredPropertyIndices
+          .filter(index => !offeredLeaseIndices.includes(index))
+          .forEach(index => { s.properties[index].ownerId = recipient.id; });
+        trade.requestedPropertyIndices
+          .filter(index => !requestedLeaseIndices.includes(index))
+          .forEach(index => { s.properties[index].ownerId = offerer.id; });
+        offeredLeaseIndices.forEach(index => {
+          s.leases[index] = {
+            propertyIndex: index,
+            ownerId: offerer.id,
+            tenantId: recipient.id,
+            expiresAtRound: s.roundCount + s.config.leaseDurationRounds
+          };
+        });
+        requestedLeaseIndices.forEach(index => {
+          s.leases[index] = {
+            propertyIndex: index,
+            ownerId: recipient.id,
+            tenantId: offerer.id,
+            expiresAtRound: s.roundCount + s.config.leaseDurationRounds
+          };
+        });
+        s.log.push(
+          `${recipient.name} nimmt den Handel mit ${offerer.name} an (geschätzter Gegenwert: ${recipientTradeValue >= 0 ? '+' : ''}${recipientTradeValue} Taler).`
+        );
+        [...offeredLeaseIndices, ...requestedLeaseIndices].forEach(index => {
+          s.log.push(`${METROVILLE_FIELDS[index].name} wird für ${s.config.leaseDurationRounds} Runden verpachtet.`);
+        });
       }
       s.pendingTrade = null;
       return s;
@@ -718,8 +993,20 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
 
     // DECLINE TRADE
     if (action.type === 'DECLINE_TRADE' && s.pendingTrade) {
-      const recipient = s.players.find(candidate => candidate.id === s.pendingTrade?.toPlayerId);
-      s.log.push(`${recipient?.name || 'Der Zielspieler'} lehnt das Handelsangebot ab.`);
+      const trade = s.pendingTrade;
+      const recipient = s.players.find(candidate => candidate.id === trade.toPlayerId);
+      const recipientTradeValue = recipient ? tradeAssetValueForPlayer(s, trade, recipient.id) : 0;
+      const acceptanceError = recipient ? tradeAcceptanceError(s, trade, recipient.id) : null;
+      const leaseOffer = (trade.offeredLeasePropertyIndices?.length || 0) > 0
+        || (trade.requestedLeasePropertyIndices?.length || 0) > 0;
+      const reason = acceptanceError
+        ? `Angebot nicht ausführbar: ${acceptanceError}`
+        : leaseOffer
+          ? 'Bots handeln keine Pacht'
+          : `geschätzter Gegenwert: ${recipientTradeValue >= 0 ? '+' : ''}${recipientTradeValue} Taler`;
+      s.log.push(
+        `${recipient?.name || 'Der Zielspieler'} lehnt das Handelsangebot ab (${reason}).`
+      );
       s.pendingTrade = null;
       return s;
     }
@@ -750,12 +1037,12 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         s.phase = 'gameover';
         const best = [...s.players].sort((a, b) => b.money - a.money)[0];
         s.winnerId = best.id;
-        s.winReason = `Rundenlimit (${s.config.turnLimit}) erreicht – Höchstes Vermögen!`;
+        s.winReason = `Spielzuglimit (${s.config.turnLimit}) erreicht – Höchstes Vermögen!`;
         return s;
       }
 
       // If doubles rolled and not in jail, player goes again
-      if (s.doublesRolledCount > 0 && !player.inJail) {
+      if (s.doublesRolledCount > 0 && !player.inJail && !player.bankrupt) {
         s.phase = 'roll';
         s.hasRolled = false;
         s.log.push(`🎲 Pasch! ${player.name} darf noch einmal würfeln.`);
@@ -768,6 +1055,16 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         return p && !p.bankrupt;
       });
 
+      const actedThisRound = new Set(s.playersActedThisRound);
+      actedThisRound.add(player.id);
+      if (activePlayers.every(playerId => actedThisRound.has(playerId))) {
+        s.roundCount++;
+        s.playersActedThisRound = [];
+        expireLeases(s);
+      } else {
+        s.playersActedThisRound = [...actedThisRound];
+      }
+
       if (activePlayers.length <= 1) {
         s.phase = 'gameover';
         s.winnerId = activePlayers[0] || null;
@@ -775,9 +1072,11 @@ export const MetrovilleModule: GameModule<MetrovilleState, MetrovilleAction, Par
         return s;
       }
 
-      const curIdx = activePlayers.indexOf(s.currentTurnPlayerId);
-      const nextIdx = (curIdx + 1) % activePlayers.length;
-      s.currentTurnPlayerId = activePlayers[nextIdx];
+      const orderIndex = s.playerOrder.indexOf(s.currentTurnPlayerId);
+      const nextPlayerId = s.playerOrder
+        .map((_, offset) => s.playerOrder[(orderIndex + offset + 1) % s.playerOrder.length])
+        .find(playerId => activePlayers.includes(playerId));
+      s.currentTurnPlayerId = nextPlayerId || activePlayers[0];
       s.phase = 'roll';
       s.hasRolled = false;
       s.doublesRolledCount = 0;
@@ -821,11 +1120,16 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
 
   // Passed Stadttor
   if (player.position < oldPos && steps > 0) {
-    player.money += state.config.goPassSalary;
-    state.log.push(`🏙️ ${player.name} passiert das Stadttor und kassiert ${state.config.goPassSalary} Taler.`);
+    grantGoPassSalary(state, player);
   }
 
   const field = METROVILLE_FIELDS[player.position];
+  if (player.position === 20 && state.config.mechanics.cityParkJackpot && state.cityParkJackpot > 0) {
+    const winnings = state.cityParkJackpot;
+    state.cityParkJackpot = 0;
+    player.money += winnings;
+    state.log.push(`${player.name} erhält ${winnings} Taler aus dem Stadtpark-Jackpot.`);
+  }
   if (field.type === 'station') {
     state.log.push(`${player.name} zieht in ${field.name} ein.`);
   } else {
@@ -844,8 +1148,10 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
 
   // Taxes
   if (field.type === 'tax' && field.taxAmount) {
-    player.money -= field.taxAmount;
-    state.log.push(`💸 ${player.name} zahlt ${field.taxAmount} Taler ${field.name}.`);
+    const taxAmount = Math.round(field.taxAmount * state.config.taxMultiplier);
+    player.money -= taxAmount;
+    addToCityParkJackpot(state, taxAmount);
+    state.log.push(`💸 ${player.name} zahlt ${taxAmount} Taler ${field.name}.`);
     checkBankruptcy(state, player);
     state.phase = 'turn_end';
     return;
@@ -874,11 +1180,12 @@ function movePlayer(state: MetrovilleState, player: MetrovillePlayer, steps: num
     const prop = state.properties[player.position];
     if (!prop.ownerId) {
       state.phase = 'tile_action';
-    } else if (prop.ownerId !== player.id) {
+    } else if (prop.ownerId !== player.id && state.leases[player.position]?.tenantId !== player.id) {
       const rent = calculateRent(player.position, state);
       if (rent > 0) {
         player.money -= rent;
-        const owner = state.players.find(p => p.id === prop.ownerId);
+        const rentRecipientId = state.leases[player.position]?.tenantId || prop.ownerId;
+        const owner = state.players.find(p => p.id === rentRecipientId);
         if (owner) owner.money += rent;
         state.log.push(`🏷️ ${player.name} zahlt ${rent} Taler Miete an ${owner?.name}.`);
         checkBankruptcy(state, player, owner);
@@ -898,7 +1205,7 @@ function checkBankruptcy(state: MetrovilleState, player: MetrovillePlayer, credi
 
   // Auto-mortgage properties to recover
   for (const [idxStr, prop] of Object.entries(state.properties)) {
-    if (prop.ownerId === player.id && !prop.isMortgaged && prop.houses === 0) {
+    if (prop.ownerId === player.id && !prop.isMortgaged && prop.houses === 0 && !state.leases[Number(idxStr)]) {
       const f = METROVILLE_FIELDS[Number(idxStr)];
       if (f.cost) {
         prop.isMortgaged = true;
@@ -913,6 +1220,12 @@ function checkBankruptcy(state: MetrovilleState, player: MetrovillePlayer, credi
   if (player.money < 0) {
     player.bankrupt = true;
     state.log.push(`💥 BANKROTT! ${player.name} scheidet aus dem Spiel aus.`);
+    Object.entries(state.leases).forEach(([index, lease]) => {
+      if (lease.tenantId === player.id || lease.ownerId === player.id) {
+        delete state.leases[Number(index)];
+        state.log.push(`Die Pacht für ${METROVILLE_FIELDS[Number(index)].name} endet wegen Bankrotts.`);
+      }
+    });
     // Transfer or reset properties
     Object.values(state.properties).forEach(prop => {
       if (prop.ownerId === player.id) {
@@ -928,6 +1241,15 @@ function checkBankruptcy(state: MetrovilleState, player: MetrovillePlayer, credi
       state.winReason = 'Alle Kontrahenten sind bankrott!';
     }
   }
+}
+
+function expireLeases(state: MetrovilleState) {
+  Object.entries(state.leases).forEach(([index, lease]) => {
+    if (lease.expiresAtRound <= state.roundCount) {
+      delete state.leases[Number(index)];
+      state.log.push(`Die Pacht für ${METROVILLE_FIELDS[Number(index)].name} endet; das Grundstück fällt zurück.`);
+    }
+  });
 }
 
 function advanceAuction(state: MetrovilleState) {

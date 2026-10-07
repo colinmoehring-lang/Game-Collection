@@ -1,4 +1,5 @@
 import type { CardDefinition, MetrovilleState } from './types.js';
+import { addToCityParkJackpot, grantGoPassSalary, grantGoSalary } from './economy.js';
 
 export const EXPRESS_CARDS: CardDefinition[] = [
   {
@@ -10,7 +11,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
       const p = state.players.find(pl => pl.id === pid);
       if (p) {
         p.position = 0;
-        p.money += state.config.goPassSalary;
+        grantGoSalary(state, p);
       }
     }
   },
@@ -22,7 +23,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
     action: (state, pid) => {
       const p = state.players.find(pl => pl.id === pid);
       if (p) {
-        if (p.position > 37) p.money += state.config.goPassSalary;
+        if (p.position > 37) grantGoPassSalary(state, p);
         p.position = 37;
       }
     }
@@ -77,6 +78,7 @@ export const EXPRESS_CARDS: CardDefinition[] = [
         }
       });
       p.money -= cost;
+      addToCityParkJackpot(state, cost);
     }
   }
 ];

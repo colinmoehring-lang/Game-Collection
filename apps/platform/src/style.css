@@ -629,6 +629,28 @@ button.danger {
   line-height: 1.5;
 }
 
+.metro-center .metro-center-jackpot {
+  padding: 5px 9px;
+  border: 1px solid var(--mustard-dark);
+  border-radius: 999px;
+  color: var(--charcoal);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.metro-lease-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.metro-lease-option input {
+  width: auto;
+}
+
 .metro-tile {
   position: relative;
   min-width: 0;
@@ -941,6 +963,15 @@ button.danger {
   border-radius: 2px;
   background: var(--cream);
   box-shadow: inset 1px 1px 0 rgba(43, 40, 37, 0.12);
+}
+
+.metro-lease-option[hidden] {
+  display: none;
+}
+
+.metro-trade-panel .metro-lease-option input {
+  width: auto;
+  margin: 0;
 }
 
 .metro-trade-panel select[multiple] {

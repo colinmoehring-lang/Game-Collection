@@ -45,12 +45,42 @@ export type CardDeck = 'chance' | 'community';
 
 export type MetrovillePreset = 'blitz' | 'standard' | 'classic_light';
 
+export interface MetrovilleMechanics {
+  cityParkJackpot: boolean;
+  lowestWealthBonus: boolean;
+  propertyLeases: boolean;
+  botTrading: boolean;
+}
+
+export const METROVILLE_PRESET_MECHANICS: Record<MetrovillePreset, MetrovilleMechanics> = {
+  blitz: { cityParkJackpot: false, lowestWealthBonus: false, propertyLeases: false, botTrading: false },
+  standard: { cityParkJackpot: false, lowestWealthBonus: false, propertyLeases: false, botTrading: false },
+  classic_light: { cityParkJackpot: false, lowestWealthBonus: false, propertyLeases: false, botTrading: false }
+};
+
 export interface MetrovilleConfig {
   preset: MetrovillePreset;
   startingMoney: number;
   goPassSalary: number;
+  taxMultiplier: number;
   turnLimit?: number;
+  cityParkJackpotCap: number;
+  lowestWealthBonusAmount: number;
+  leaseDurationRounds: number;
+  mechanics: MetrovilleMechanics;
 }
+
+export type MetrovilleConfigInput = Omit<Partial<MetrovilleConfig>, 'mechanics'> & {
+  mechanics?: Partial<MetrovilleMechanics>;
+};
+
+export const METROVILLE_RULE_DEFAULTS = {
+  cityParkJackpotCap: 500,
+  lowestWealthBonusAmount: 50,
+  leaseDurationRounds: 5,
+  goPassSalary: 200,
+  taxMultiplier: 1
+} as const;
 
 export interface CardDefinition {
   id: string;
@@ -66,8 +96,17 @@ export interface TradeOffer {
   toPlayerId: string;
   offeredMoney: number;
   offeredPropertyIndices: number[];
+  offeredLeasePropertyIndices?: number[];
   requestedMoney: number;
   requestedPropertyIndices: number[];
+  requestedLeasePropertyIndices?: number[];
+}
+
+export interface PropertyLease {
+  propertyIndex: number;
+  ownerId: string;
+  tenantId: string;
+  expiresAtRound: number;
 }
 
 export interface AuctionState {
@@ -84,6 +123,8 @@ export interface MetrovilleState {
   seed: string;
   randomIndex: number;
   turnCount: number;
+  roundCount: number;
+  playersActedThisRound: string[];
   tradeSequence: number;
   players: MetrovillePlayer[];
   playerOrder: string[];
@@ -92,9 +133,12 @@ export interface MetrovilleState {
   dice: [number, number];
   doublesRolledCount: number;
   hasRolled: boolean;
+  botTradeOfferRounds: Record<string, number>;
   phase: 'roll' | 'tile_action' | 'turn_end' | 'auction' | 'card_reveal' | 'gameover';
   pendingCard: { cardId: string; deck: CardDeck; title: string; text: string } | null;
   properties: Record<number, PropertyState>;
+  cityParkJackpot: number;
+  leases: Record<number, PropertyLease>;
   chanceDeck: string[]; // Card IDs
   communityDeck: string[];
   lastDrawnCard: { deck: CardDeck; title: string; text: string } | null;
