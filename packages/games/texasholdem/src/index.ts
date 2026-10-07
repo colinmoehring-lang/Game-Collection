@@ -117,6 +117,34 @@ export function evaluateBestHand(cards: string[]): EvaluatedHand {
     .reduce((best, candidate) => compareScores(candidate.score, best.score) > 0 ? candidate : best);
 }
 
+function estimateHandStrength(state: PokerState, player: PokerPlayer): number {
+  if (state.gameType === 'texasholdem' && state.communityCards.length < 3) {
+    const firstRank = cardValue(player.hand[0]);
+    const secondRank = cardValue(player.hand[1]);
+    const highRank = Math.max(firstRank, secondRank);
+    const lowRank = Math.min(firstRank, secondRank);
+    if (firstRank === secondRank) return 0.55 + (highRank - 2) * 0.025;
+
+    const gap = highRank - lowRank;
+    return Math.min(
+      0.78,
+      0.22
+        + (highRank - 2) * 0.014
+        + (lowRank - 2) * 0.008
+        + (player.hand[0]?.[1] === player.hand[1]?.[1] ? 0.06 : 0)
+        + (gap <= 2 ? 0.04 : 0)
+    );
+  }
+
+  const hand = state.gameType === 'fivecarddraw'
+    ? evaluateFive(player.hand)
+    : evaluateBestHand([...player.hand, ...state.communityCards]);
+  const rank = hand.score[1] || 2;
+  const categoryStrength = [0.12, 0.32, 0.60, 0.75, 0.85, 0.89, 0.96, 0.985, 0.997][hand.score[0]] || 0.12;
+  const rankBonus = hand.score[0] <= 3 ? (rank - 2) / 12 * (hand.score[0] === 1 ? 0.16 : 0.12) : 0;
+  return Math.min(0.999, categoryStrength + rankBonus);
+}
+
 function cloneState(state: PokerState): PokerState {
   return {
     ...state,
@@ -506,21 +534,35 @@ export class TexasHoldemBot implements BotStrategy<PokerState, PokerAction> {
       return { type: 'DRAW', indices: player.hand.map((_, index) => index).filter(index => !keep.has(index)) };
     }
     const callAmount = Math.max(0, state.currentBet - player.currentBet);
-    const handStrength = state.gameType === 'fivecarddraw'
-      ? evaluateFive(player.hand).score[0]
-      : state.communityCards.length >= 3
-        ? evaluateBestHand([...player.hand, ...state.communityCards]).score[0]
-      : (cardValue(player.hand[0]) === cardValue(player.hand[1]) ? 3 : 0)
-        + (Math.max(cardValue(player.hand[0]), cardValue(player.hand[1])) >= 12 ? 2 : 0)
-        + (player.hand[0]?.[1] === player.hand[1]?.[1] ? 1 : 0);
+    const handStrength = estimateHandStrength(state, player);
+    const raiseThreshold = this.difficulty === 'easy' ? 0.76 : this.difficulty === 'hard' ? 0.48 : 0.53;
     if (callAmount === 0) {
-      if (this.difficulty !== 'easy' && handStrength >= 5 && !player.raiseLocked && player.chips >= state.minRaise) {
-        return { type: 'RAISE', raiseTo: state.currentBet + state.minRaise };
+      if (handStrength >= raiseThreshold && !player.raiseLocked && player.chips >= state.minRaise) {
+        const raiseMultiplier = handStrength >= 0.78 ? 3 : handStrength >= 0.65 ? 2 : 1;
+        const maxRaiseTo = player.currentBet + player.chips;
+        return {
+          type: 'RAISE',
+          raiseTo: Math.min(maxRaiseTo, state.currentBet + state.minRaise * raiseMultiplier)
+        };
       }
       return { type: 'CHECK' };
     }
-    if (handStrength < 2 && callAmount > state.pot / 2) return { type: 'FOLD' };
-    if (callAmount >= player.chips && handStrength >= 6) return { type: 'ALL_IN' };
+
+    const potOdds = callAmount / (state.pot + callAmount);
+    const callMargin = this.difficulty === 'easy' ? 0.15 : this.difficulty === 'hard' ? 0.02 : 0.08;
+    if (handStrength < potOdds + callMargin) return { type: 'FOLD' };
+
+    const maxRaiseTo = player.currentBet + player.chips;
+    const minRaiseTo = state.currentBet + state.minRaise;
+    const valueRaiseThreshold = this.difficulty === 'easy' ? 0.9 : this.difficulty === 'hard' ? 0.68 : 0.76;
+    if (!player.raiseLocked && maxRaiseTo >= minRaiseTo && handStrength >= valueRaiseThreshold) {
+      const raiseMultiplier = handStrength >= 0.9 ? 3 : 2;
+      return {
+        type: 'RAISE',
+        raiseTo: Math.min(maxRaiseTo, state.currentBet + state.minRaise * raiseMultiplier)
+      };
+    }
+    if (callAmount >= player.chips && handStrength >= 0.8) return { type: 'ALL_IN' };
     return { type: 'CALL' };
   }
 }

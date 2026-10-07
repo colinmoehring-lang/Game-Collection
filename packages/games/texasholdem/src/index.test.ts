@@ -33,6 +33,19 @@ describe('Texas Hold’em', () => {
     expect(TexasHoldemModule.validateAction(state, { type: 'CALL' }, actor.id).valid).toBe(true);
   });
 
+  it('raises strong hands and checks weak hands when no bet is facing the bot', () => {
+    const bot = TexasHoldemModule.createBot!('medium');
+    const state = TexasHoldemModule.createInitialState({}, players, 'seed-bot-decisions');
+    const player = state.players.find(candidate => candidate.id === state.currentTurnPlayerId)!;
+    state.currentBet = player.currentBet;
+
+    player.hand = ['AS', 'AH'];
+    expect(bot.chooseAction(state, player.id)).toEqual({ type: 'RAISE', raiseTo: state.currentBet + state.minRaise * 3 });
+
+    player.hand = ['2S', '7D'];
+    expect(bot.chooseAction(state, player.id)).toEqual({ type: 'CHECK' });
+  });
+
   it('posts blinds clockwise at a three-player table and keeps fold wins in the tournament', () => {
     const threePlayers = [...players, { id: 'p3', name: 'Grace', color: '#D4930A' }];
     const threePlayerState = TexasHoldemModule.createInitialState({}, threePlayers, 'seed-blinds');

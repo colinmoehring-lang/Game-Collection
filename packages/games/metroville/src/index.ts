@@ -169,10 +169,27 @@ export class MetrovilleBot implements BotStrategy<MetrovilleState, MetrovilleAct
 
     // Auction Phase
     if (state.phase === 'auction' && state.auction) {
-      const maxBid = Math.floor(player.money * 0.4);
-      if (state.auction.highestBid + 10 <= maxBid) {
-        return { type: 'BID_AUCTION', bidAmount: state.auction.highestBid + 10 };
+      const field = METROVILLE_FIELDS[state.auction.propertyIndex];
+      if (!field?.cost) return { type: 'PASS_AUCTION' };
+
+      let valueMultiplier = 1.25;
+      if (field.district) {
+        const districtFields = DISTRICT_MAP[field.district];
+        const ownedCount = districtFields.filter(index => state.properties[index]?.ownerId === playerId).length;
+        if (ownedCount === districtFields.length - 1) valueMultiplier = 1.8;
+        else if (ownedCount > 0) valueMultiplier = 1.45;
+      } else if (field.type === 'station' || field.type === 'utility') {
+        const collection = DISTRICT_MAP[field.type];
+        const ownedCount = collection.filter(index => state.properties[index]?.ownerId === playerId).length;
+        valueMultiplier += Math.min(0.25, ownedCount * 0.08);
       }
+
+      const propertyLimit = Math.floor(field.cost * valueMultiplier / 10) * 10;
+      const reserve = this.difficulty === 'hard' ? 200 : 100;
+      const affordableLimit = Math.max(0, player.money - reserve);
+      const maxBid = Math.min(propertyLimit, affordableLimit);
+      const nextBid = state.auction.highestBid + 10;
+      if (nextBid <= maxBid) return { type: 'BID_AUCTION', bidAmount: nextBid };
       return { type: 'PASS_AUCTION' };
     }
 

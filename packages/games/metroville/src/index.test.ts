@@ -154,14 +154,14 @@ describe('MetroVille Rule Engine', () => {
     expect(nextState.properties[1].isMortgaged).toBe(true);
   });
 
-  it('bot ends turn after a failed jail roll instead of rolling again', () => {
+  it('bot ends turn after a failed jail roll instead of rolling again', async () => {
     const bot = MetrovilleModule.createBot!('medium');
     let state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-jail-bot');
     state.players[0].inJail = true;
     state.players[0].jailTurns = 1;
     state.phase = 'turn_end';
     state.currentTurnPlayerId = 'p1';
-    const action = bot.chooseAction(state, 'p1');
+    const action = await bot.chooseAction(state, 'p1');
     expect(action.type).toBe('END_TURN');
   });
 
@@ -216,6 +216,34 @@ describe('MetroVille Rule Engine', () => {
     expect(state.properties[1].ownerId).toBe('p1');
     expect(state.players[0].money).toBe(1490);
     expect(state.auction).toBeNull();
+  });
+
+  it('keeps auction bids close to property value and values a district completion', async () => {
+    const bot = MetrovilleModule.createBot!('medium');
+    const state = MetrovilleModule.createInitialState({ preset: 'standard' }, [p1, p2], 'seed-auction-bot');
+    state.phase = 'auction';
+    state.auction = {
+      propertyIndex: 6,
+      initiatorId: 'p2',
+      highestBid: 0,
+      highestBidderId: null,
+      activePlayerIds: ['p1', 'p2'],
+      currentBidderIndex: 0
+    };
+
+    const standaloneBid = await bot.chooseAction(state, 'p1');
+    expect(standaloneBid).toEqual({ type: 'BID_AUCTION', bidAmount: 10 });
+    if (standaloneBid.type === 'BID_AUCTION') expect(standaloneBid.bidAmount).toBeLessThanOrEqual(130);
+
+    state.properties[8].ownerId = 'p1';
+    state.properties[9].ownerId = 'p1';
+    const completionBid = await bot.chooseAction(state, 'p1');
+    expect(completionBid).toEqual({ type: 'BID_AUCTION', bidAmount: 10 });
+
+    state.auction.highestBid = 170;
+    expect(await bot.chooseAction(state, 'p1')).toEqual({ type: 'BID_AUCTION', bidAmount: 180 });
+    state.auction.highestBid = 180;
+    expect(await bot.chooseAction(state, 'p1')).toEqual({ type: 'PASS_AUCTION' });
   });
 
   it('executes and declines player trades atomically', () => {
