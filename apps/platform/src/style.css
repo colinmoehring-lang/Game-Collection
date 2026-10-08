@@ -505,6 +505,93 @@ button.danger {
   margin: 0 auto 20px auto;
 }
 
+.mensch-board {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(100%, 680px);
+  margin: 0 auto 20px auto;
+  padding: 14px;
+  border: 2px solid var(--charcoal);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 6px 6px 0 rgba(28, 25, 23, 0.08);
+}
+
+.mensch-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.mensch-roll-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--charcoal);
+  background: #fff;
+  padding: 6px 10px;
+  border: 1px solid var(--charcoal);
+  border-radius: 999px;
+}
+
+.mensch-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 2px solid var(--charcoal);
+  border-radius: 8px;
+}
+
+.mensch-player-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  font-weight: 600;
+}
+
+.mensch-player-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--charcoal);
+  display: inline-block;
+}
+
+.mensch-token-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mensch-token {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  border: 2px solid var(--charcoal);
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.15);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mensch-token:disabled {
+  opacity: 0.7;
+  box-shadow: none;
+}
+
 .cell {
   background: var(--cream);
   border: none;

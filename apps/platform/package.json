@@ -10,6 +10,7 @@
   "dependencies": {
     "@metroville/game-sdk": "workspace:*",
     "@metroville/game-metroville": "workspace:*",
+    "@metroville/game-mensch": "workspace:*",
     "@metroville/game-tictactoe": "workspace:*",
     "@metroville/game-texasholdem": "workspace:*",
     "colyseus.js": "0.15.28",

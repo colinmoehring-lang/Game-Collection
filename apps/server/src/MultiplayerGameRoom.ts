@@ -9,6 +9,7 @@ import {
   metroBotFallbackAction
 } from './botTurn.js';
 import { MetrovilleModule, remapMetrovillePlayerId } from '@metroville/game-metroville';
+import { MenschAergereDichNichtModule } from '@metroville/game-mensch';
 import { TicTacToeModule } from '@metroville/game-tictactoe';
 import { TexasHoldemModule } from '@metroville/game-texasholdem';
 import { FiveCardDrawModule } from '@metroville/game-texasholdem';
@@ -16,6 +17,7 @@ import { FiveCardDrawModule } from '@metroville/game-texasholdem';
 const GAME_MODULES: Record<string, GameModule<any, any>> = {
   [MetrovilleModule.manifest.id]: MetrovilleModule,
   [TicTacToeModule.manifest.id]: TicTacToeModule,
+  [MenschAergereDichNichtModule.manifest.id]: MenschAergereDichNichtModule,
   [TexasHoldemModule.manifest.id]: TexasHoldemModule,
   [FiveCardDrawModule.manifest.id]: FiveCardDrawModule
 };
@@ -366,6 +368,10 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
       this.state.currentTurnPlayerId = turnPlayer ? turnPlayer.id : '';
       return;
     }
+    if (this.state.gameId === 'mensch-aerger-dich-nicht') {
+      this.state.currentTurnPlayerId = this.runtimeGameState.currentTurnPlayerId;
+      return;
+    }
     if (this.state.gameId === 'metroville') {
       const auction = this.runtimeGameState.auction;
       this.state.currentTurnPlayerId = auction
@@ -417,6 +423,13 @@ export class MultiplayerGameRoom extends Room<GameRoomState> {
           this.runtimeGameState.players[symbol].id = nextId;
         }
       }
+      return;
+    }
+    if (this.state.gameId === 'mensch-aerger-dich-nicht') {
+      this.runtimeGameState.players = this.runtimeGameState.players.map((player: any) =>
+        player.id === previousId ? { ...player, id: nextId } : player
+      );
+      if (this.runtimeGameState.currentTurnPlayerId === previousId) this.runtimeGameState.currentTurnPlayerId = nextId;
       return;
     }
     if (this.state.gameId === 'metroville') {

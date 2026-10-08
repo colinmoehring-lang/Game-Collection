@@ -181,6 +181,9 @@ importers:
 
   apps/platform:
     dependencies:
+      '@metroville/game-mensch':
+        specifier: workspace:*
+        version: link:../../packages/games/mensch
       '@metroville/game-metroville':
         specifier: workspace:*
         version: link:../../packages/games/metroville
@@ -227,6 +230,9 @@ importers:
       '@colyseus/ws-transport':
         specifier: 0.15.3
         version: 0.15.3(@colyseus/core@0.15.57(@colyseus/schema@2.0.35))(@colyseus/schema@2.0.35)
+      '@metroville/game-mensch':
+        specifier: workspace:*
+        version: link:../../packages/games/mensch
       '@metroville/game-metroville':
         specifier: workspace:*
         version: link:../../packages/games/metroville
@@ -266,6 +272,19 @@ importers:
         version: 5.9.3
 
   packages/game-sdk:
+    devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@22.20.4)(tsx@4.23.15)
+
+  packages/games/mensch:
+    dependencies:
+      '@metroville/game-sdk':
+        specifier: workspace:*
+        version: link:../../game-sdk
     devDependencies:
       typescript:
         specifier: ^5.8.2

@@ -31,6 +31,7 @@ Render-Setup mit GitHub-Verknüpfung: [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER
 
 - **MetroVille: City of Fortune:** Multiplayer-Brettspiel mit Grundstücken, Besitz, Mieten, Auktionen, Handel, Gebäuden, Hypotheken und Bots. Das Preset wird in der Lobby ausgewählt: Blitz, Standard oder Klassisch Light.
 - **Tic-Tac-Toe:** Einfaches rundenbasiertes Multiplayer-Spiel.
+- **Mensch ärgere dich nicht:** Klassisches Würfelspiel für 2 bis 4 Spieler mit vier Figuren pro Spieler und Ziel der vollständigen Runde.
 - **Texas Hold’em:** Multiplayer-Poker für 2 bis 8 Personen mit privaten Hole Cards, Blinds, No-Limit-Einsätzen und Showdown.
 - **Five Card Draw:** Poker für 2 bis 8 Personen mit fünf Karten, einer Tauschrunde und zwei Setzrunden.
 

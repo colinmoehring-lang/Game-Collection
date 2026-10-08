@@ -533,6 +533,11 @@ function renderGame(state: any) {
     return;
   }
 
+  if (state.gameId === 'mensch-aerger-dich-nicht') {
+    renderMenschAergereDichNicht(state, runtimeState);
+    return;
+  }
+
   texasHoldemGame.hidden = true;
   if (state.gameId === 'metroville') {
     queueMetrovilleRender(state, runtimeState);
@@ -581,6 +586,83 @@ function renderGame(state: any) {
     });
 
     multiBoard.appendChild(cell);
+  });
+}
+
+function renderMenschAergereDichNicht(state: any, runtimeState: any) {
+  gameTitleHeader.textContent = 'Mensch ärgere dich nicht';
+  tictactoeGame.hidden = false;
+  texasHoldemGame.hidden = true;
+  metrovilleGame.hidden = true;
+  multiBoard.className = 'mensch-board';
+  multiBoard.innerHTML = '';
+
+  const mySessionId = currentRoom?.sessionId;
+  const isMyTurn = state.currentTurnPlayerId === mySessionId;
+  const turnPlayer = runtimeState.players?.find((player: any) => player.id === state.currentTurnPlayerId);
+  const hasRollPending = !!state.pendingRoll && isMyTurn && state.status !== 'gameover';
+
+  gameStatusBar.textContent = state.status === 'gameover'
+    ? `🎉 Spiel beendet: ${state.winReason || 'Eine Figur hat das Ziel erreicht'}`
+    : isMyTurn
+      ? (state.pendingRoll
+        ? 'Du bist am Zug. Würfle, um eine Figur zu bewegen.'
+        : `Du bist am Zug. Schiebe eine Figur um ${state.lastRoll ?? 0} Felder.`)
+      : `Warten auf ${turnPlayer?.name || 'den nächsten Spieler'}…`;
+
+  const actionRow = document.createElement('div');
+  actionRow.className = 'mensch-action-row';
+
+  const rollButton = document.createElement('button');
+  rollButton.type = 'button';
+  rollButton.className = 'primary';
+  rollButton.textContent = state.pendingRoll ? 'Würfeln' : 'Wurf ausstehend';
+  rollButton.disabled = !hasRollPending || state.status === 'gameover';
+  rollButton.addEventListener('click', () => {
+    currentRoom?.send('GAME_ACTION', { type: 'ROLL_DICE' });
+  });
+  actionRow.appendChild(rollButton);
+
+  const rollBadge = document.createElement('div');
+  rollBadge.className = 'mensch-roll-badge';
+  rollBadge.textContent = state.lastRoll ? `Wurf: ${state.lastRoll}` : (state.pendingRoll ? 'Bereit zum Würfeln' : 'Warte auf Zug');
+  actionRow.appendChild(rollBadge);
+  multiBoard.appendChild(actionRow);
+
+  (runtimeState.players || []).forEach((player: any) => {
+    const row = document.createElement('div');
+    row.className = 'mensch-player-row';
+
+    const playerMeta = document.createElement('div');
+    playerMeta.className = 'mensch-player-meta';
+    const dot = document.createElement('span');
+    dot.className = 'mensch-player-dot';
+    dot.style.background = player.color || '#C84B2F';
+    const label = document.createElement('span');
+    label.textContent = `${player.name}${state.currentTurnPlayerId === player.id ? ' • am Zug' : ''}`;
+    playerMeta.appendChild(dot);
+    playerMeta.appendChild(label);
+    row.appendChild(playerMeta);
+
+    const tokenList = document.createElement('div');
+    tokenList.className = 'mensch-token-list';
+
+    (player.tokens || []).forEach((token: any, index: number) => {
+      const tokenButton = document.createElement('button');
+      tokenButton.type = 'button';
+      tokenButton.className = 'mensch-token';
+      tokenButton.title = `Token ${index + 1} | ${token.finished ? 'fertig' : token.progress === 0 ? 'im Start' : `Feld ${token.progress}`}`;
+      tokenButton.textContent = token.finished ? '✓' : token.progress === 0 ? '•' : String(token.progress);
+      tokenButton.style.background = player.color || '#C84B2F';
+      tokenButton.disabled = !isMyTurn || player.id !== mySessionId || state.status === 'gameover' || state.pendingRoll || !state.lastRoll || token.finished;
+      tokenButton.addEventListener('click', () => {
+        currentRoom?.send('GAME_ACTION', { type: 'MOVE_TOKEN', tokenId: token.id });
+      });
+      tokenList.appendChild(tokenButton);
+    });
+
+    row.appendChild(tokenList);
+    multiBoard.appendChild(row);
   });
 }
 
